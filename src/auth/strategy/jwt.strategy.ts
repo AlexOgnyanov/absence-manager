@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user/user.service';
 
-import { ContextUser } from '../dto';
+import { ContextUser } from '../dtos';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

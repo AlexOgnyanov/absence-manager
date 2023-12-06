@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 
-import { ContextUser, LoginDto } from './dto';
+import { ContextUser, LoginDto } from './dtos';
 import { AuthErrorCodes } from './errors';
 
 @Injectable()
