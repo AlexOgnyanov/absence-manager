@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthErrorCodes } from 'src/auth/errors';
 
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto, UpdateUserDto } from './dtos';
 import { UserEntity } from './entities';
 import { UserErrorCodes } from './errors/user-errors.enum';
 
