@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  ManyToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as argon2 from 'argon2';
+import { RoleEntity } from 'src/roles/entities';
 
 @Entity('user')
 export class UserEntity {
@@ -35,6 +37,9 @@ export class UserEntity {
     unique: true,
   })
   phone: string;
+
+  @ManyToOne(() => RoleEntity, (role) => role.users, { onDelete: 'SET NULL' })
+  role: RoleEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: string;

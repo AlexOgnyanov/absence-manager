@@ -9,6 +9,9 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtAsyncConfig, typeOrmAsyncConfig } from './config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { CaslModule } from './casl/casl.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { AuthModule } from './auth/auth.module';
     SwaggerModule,
     UserModule,
     AuthModule,
+    CaslModule,
+    RolesModule,
+    PermissionsModule,
   ],
   providers: [
     {

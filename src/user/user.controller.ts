@@ -6,9 +6,12 @@ import {
   Param,
   Delete,
   UseGuards,
+  Request,
+  Get,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guard';
+import { RequestWithUser } from 'src/auth/dtos';
 
 import { CreateUserDto, UpdateUserDto } from './dtos';
 import { UserService } from './user.service';
@@ -20,9 +23,14 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('me')
+  async getMe(@Request() req: RequestWithUser) {
+    return await this.userService.findOne(req.user.id);
+  }
+
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    return await this.userService.create(createUserDto);
   }
 
   @Patch(':id')
@@ -32,6 +40,6 @@ export class UserController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.userService.remove(id);
+    return await this.userService.delete(id);
   }
 }

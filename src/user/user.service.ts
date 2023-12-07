@@ -27,6 +27,13 @@ export class UserService {
 
   async findOne(id: string): Promise<UserEntity> {
     return this.userRepository.findOne({
+      relations: {
+        role: {
+          permissions: {
+            roles: false,
+          },
+        },
+      },
       where: {
         id,
       },
@@ -36,7 +43,7 @@ export class UserService {
   async findOneOrFail(id: string): Promise<UserEntity> {
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException(AuthErrorCodes.UserNotFound);
+      throw new NotFoundException(AuthErrorCodes.UserNotFoundError);
     }
     return user;
   }
@@ -45,7 +52,7 @@ export class UserService {
     await this.userRepository.update(id, { ...dto });
   }
 
-  async remove(id: string): Promise<void> {
+  async delete(id: string): Promise<void> {
     await this.userRepository.delete(id);
   }
 
