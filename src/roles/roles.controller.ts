@@ -6,13 +6,16 @@ import {
   Param,
   Post,
   Put,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Paginate, PaginateQuery, Paginated } from 'nestjs-paginate';
 import { RoleEntity } from 'src/roles/entities/role.entity';
-import { JwtAuthGuard } from 'src/auth/guard';
-import { UpdateResult } from 'typeorm';
+import { JwtAuthGuard, PermissionsGuard } from 'src/auth/guards';
+import { CheckPermissions } from 'src/auth/decorators';
+import { PermissionAction, PermissionObject } from 'src/permissions/enums';
+import { RequestWithUser } from 'src/auth/dtos';
 
 import { RolesService } from './roles.service';
 import { AssignRoleToUserDto, CreateRoleDto } from './dtos';
@@ -20,7 +23,7 @@ import { UpdateRoleDto } from './dtos/update-role.dto';
 
 @ApiTags('Roles')
 @ApiBearerAuth('AccessToken')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
@@ -29,19 +32,20 @@ export class RolesController {
     status: 200,
     description: 'Create role',
   })
-  @ApiBearerAuth('AccessToken')
-  @ApiTags('Roles')
+  @CheckPermissions([PermissionAction.Create, PermissionObject.Role])
   @Post()
-  async createRole(@Body() dto: CreateRoleDto): Promise<RoleEntity> {
-    return await this.rolesService.createRoleOrFail(dto);
+  async createRole(
+    @Request() req: RequestWithUser,
+    @Body() dto: CreateRoleDto,
+  ): Promise<RoleEntity> {
+    return await this.rolesService.createRoleOrFail(req.user.id, dto);
   }
 
   @ApiResponse({
     status: 200,
     description: 'Get role by id',
   })
-  @ApiBearerAuth('AccessToken')
-  @ApiTags('Roles')
+  @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get(':id')
   async findOneRole(@Param('id') id: number): Promise<RoleEntity | null> {
     return await this.rolesService.findOneRoleOrFail(id);
@@ -51,8 +55,7 @@ export class RolesController {
     status: 200,
     description: 'Get all roles',
   })
-  @ApiBearerAuth('AccessToken')
-  @ApiTags('Roles')
+  @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get()
   async findAllRoles(
     @Paginate() query: PaginateQuery,
@@ -64,29 +67,32 @@ export class RolesController {
     status: 200,
     description: 'Update role',
   })
-  @ApiBearerAuth('AccessToken')
-  @ApiTags('Roles')
+  @CheckPermissions([PermissionAction.Update, PermissionObject.Role])
   @Put(':id')
   async updateRole(
+    @Request() req: RequestWithUser,
     @Param('id') id: number,
     @Body() dto: UpdateRoleDto,
-  ): Promise<UpdateResult> {
-    return await this.rolesService.update(id, dto);
+  ): Promise<RoleEntity> {
+    return await this.rolesService.update(req.user.id, id, dto);
   }
 
   @ApiResponse({
     status: 200,
     description: 'Delete role',
   })
-  @ApiBearerAuth('AccessToken')
-  @ApiTags('Roles')
+  @CheckPermissions([PermissionAction.Delete, PermissionObject.Role])
   @Delete(':id')
   async deleteRole(@Param('id') id: number) {
     return await this.rolesService.delete(id);
   }
 
+  @CheckPermissions([PermissionAction.Update, PermissionObject.User])
   @Post('assign')
-  async assignRole(@Body() dto: AssignRoleToUserDto) {
-    return await this.rolesService.assignRole(dto);
+  async assignRole(
+    @Request() req: RequestWithUser,
+    @Body() dto: AssignRoleToUserDto,
+  ) {
+    return await this.rolesService.assignRole(req.user.id, dto);
   }
 }

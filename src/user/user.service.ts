@@ -22,7 +22,7 @@ export class UserService {
     await this.checkCredentialsOrFail(dto.email, dto.phone);
     const user = this.userRepository.create({ ...dto });
 
-    return await this.userRepository.save<UserEntity>(user);
+    return await this.userRepository.save(user);
   }
 
   async findOne(id: string): Promise<UserEntity> {

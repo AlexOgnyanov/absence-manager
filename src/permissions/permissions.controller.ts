@@ -6,18 +6,22 @@ import {
   Param,
   Post,
   Put,
+  Request,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guard';
+import { JwtAuthGuard, PermissionsGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Paginate, PaginateQuery, Paginated } from 'nestjs-paginate';
+import { CheckPermissions } from 'src/auth/decorators';
+import { RequestWithUser } from 'src/auth/dtos';
 
 import { PermissionsService } from './permissions.service';
 import { PermissionEntity } from './entities';
 import { CreatePermissionDto, UpdatePermissionDto } from './dtos';
+import { PermissionAction, PermissionObject } from './enums';
 
 @ApiBearerAuth('AccessToken')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiTags('Permissions')
 @Controller('permissions')
 export class PermissionsController {
@@ -27,15 +31,15 @@ export class PermissionsController {
     status: 200,
     description: 'Create permission',
   })
-  @ApiBearerAuth('AccessToken')
+  @CheckPermissions([PermissionAction.Create, PermissionObject.Permission])
   @Post()
   async createPermission(
+    @Request() req: RequestWithUser,
     @Body() dto: CreatePermissionDto,
   ): Promise<PermissionEntity> {
-    return await this.permissionsService.createPermission(dto);
+    return await this.permissionsService.createPermission(req.user.id, dto);
   }
 
-  @ApiBearerAuth('AccessToken')
   @Get('options')
   async getPermissionOptions() {
     return this.permissionsService.getPermissionOptions();
@@ -45,7 +49,7 @@ export class PermissionsController {
     status: 200,
     description: 'Get all permissions',
   })
-  @ApiBearerAuth('AccessToken')
+  @CheckPermissions([PermissionAction.Read, PermissionObject.Permission])
   @Get()
   async findAllPermission(
     @Paginate() query: PaginateQuery,
@@ -57,7 +61,7 @@ export class PermissionsController {
     status: 200,
     description: 'Get permission by id',
   })
-  @ApiBearerAuth('AccessToken')
+  @CheckPermissions([PermissionAction.Read, PermissionObject.Permission])
   @Get(':id')
   async findOnePermission(
     @Param('id') id: number,
@@ -69,20 +73,21 @@ export class PermissionsController {
     status: 200,
     description: 'Update permission',
   })
-  @ApiBearerAuth('AccessToken')
+  @CheckPermissions([PermissionAction.Update, PermissionObject.Permission])
   @Put(':id')
   async updatePermission(
+    @Request() req: RequestWithUser,
     @Param('id') id: number,
     @Body() dto: UpdatePermissionDto,
   ): Promise<PermissionEntity> {
-    return await this.permissionsService.updatePermission(id, dto);
+    return await this.permissionsService.updatePermission(req.user.id, id, dto);
   }
 
   @ApiResponse({
     status: 200,
     description: 'Delete permission',
   })
-  @ApiBearerAuth('AccessToken')
+  @CheckPermissions([PermissionAction.Delete, PermissionObject.Permission])
   @Delete(':id')
   async deletePermission(@Param('id') id: number) {
     return await this.permissionsService.deletePermission(id);

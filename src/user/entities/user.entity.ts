@@ -4,12 +4,9 @@ import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
   ManyToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import * as argon2 from 'argon2';
 import { RoleEntity } from 'src/roles/entities';
 
 @Entity('user')
@@ -46,12 +43,4 @@ export class UserEntity {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: string;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  private async encryptPassword(): Promise<void> {
-    if (this.password) {
-      this.password = await argon2.hash(this.password);
-    }
-  }
 }

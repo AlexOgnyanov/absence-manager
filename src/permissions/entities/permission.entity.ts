@@ -5,7 +5,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PermissionAction, PermissionObject } from 'src/casl/enums';
+import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 import { RoleEntity } from 'src/roles/entities';
 
 @Entity('permission')

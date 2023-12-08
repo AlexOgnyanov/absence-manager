@@ -1,5 +1,16 @@
-import { PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty } from 'class-validator';
 
-import { CreatePermissionDto } from './create-permission.dto';
+import { PermissionAction, PermissionObject } from '../enums';
 
-export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}
+export class UpdatePermissionDto {
+  @ApiProperty()
+  @IsEnum(PermissionAction)
+  @IsNotEmpty()
+  action: PermissionAction;
+
+  @ApiProperty()
+  @IsEnum(PermissionObject)
+  @IsNotEmpty()
+  object: PermissionObject;
+}

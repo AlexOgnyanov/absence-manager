@@ -4,15 +4,16 @@ import { UserEntity } from 'src/user/entities';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAsyncConfig } from 'src/config';
 import { PassportModule } from '@nestjs/passport';
-import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
 import { PermissionEntity } from 'src/permissions/entities';
 import { RoleEntity } from 'src/roles/entities';
+import { PermissionsModule } from 'src/permissions/permissions.module';
+import { UserModule } from 'src/user/user.module';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategy';
-import { JwtAuthGuard } from './guard';
+import { JwtAuthGuard, PermissionsGuard } from './guards';
 
 @Module({
   imports: [
@@ -20,9 +21,16 @@ import { JwtAuthGuard } from './guard';
     JwtModule.registerAsync(JwtAsyncConfig),
     PassportModule,
     UserModule,
+    PermissionsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, JwtStrategy, JwtAuthGuard],
+  providers: [
+    AuthService,
+    UserService,
+    JwtStrategy,
+    JwtAuthGuard,
+    PermissionsGuard,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

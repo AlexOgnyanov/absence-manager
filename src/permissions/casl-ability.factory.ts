@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { PureAbility } from '@casl/ability';
-import { PermissionsService } from 'src/permissions/permissions.service';
 import { PermissionEntity } from 'src/permissions/entities';
 
-import { PermissionAction, PermissionObject } from './enums';
 import { AppAbility, CaslPermission } from './types';
+import { PermissionAction, PermissionObject } from './enums';
+import { PermissionsService } from './permissions.service';
 
 @Injectable()
 export class CaslAbilityFactory {
-  constructor(private permissionsService: PermissionsService) {}
+  constructor(
+    @Inject(forwardRef(() => PermissionsService))
+    private permissionsService: PermissionsService,
+  ) {}
 
-  async createForUser(userId: number): Promise<AppAbility> {
+  async createForUser(userId: string): Promise<AppAbility> {
     const dbPermissions: PermissionEntity[] =
       await this.permissionsService.findUserPermissions(userId);
 
