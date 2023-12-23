@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 
-import { ContextUser, LoginDto } from './dtos';
+import { LoginDto, ContextUser } from './dtos';
 import { AuthErrorCodes } from './errors';
 
 @Injectable()
@@ -24,19 +24,17 @@ export class AuthService {
     });
     if (!user) {
       throw new BadRequestException(
-        AuthErrorCodes.UserWithThisEmailWasNotFound,
+        AuthErrorCodes.UserWithThisEmailWasNotFoundError,
       );
     }
-    console.log(user);
     const isPasswordMatching = await argon2.verify(user.password, dto.password);
     if (!isPasswordMatching) {
-      throw new BadRequestException(AuthErrorCodes.IncorrectPassword);
+      throw new BadRequestException(AuthErrorCodes.IncorrectPasswordError);
     }
 
     const payload: ContextUser = {
       id: user.id,
     };
-    console.log(payload);
 
     return {
       access_token: await this.jwtService.signAsync(payload),
