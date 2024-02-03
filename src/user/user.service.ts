@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { AuthErrorCodes } from 'src/auth/errors';
 
 import { CreateUserDto, UpdateUserDto } from './dtos';
@@ -25,7 +25,7 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  async findOne(id: string): Promise<UserEntity> {
+  async findOne(id: string, companyId?: number): Promise<UserEntity> {
     return this.userRepository.findOne({
       relations: {
         role: {
@@ -33,15 +33,17 @@ export class UserService {
             roles: false,
           },
         },
+        company: true,
       },
       where: {
         id,
+        ...(companyId ? { company: { id: companyId } } : { company: IsNull() }),
       },
     });
   }
 
-  async findOneOrFail(id: string): Promise<UserEntity> {
-    const user = await this.findOne(id);
+  async findOneOrFail(id: string, companyId?: number): Promise<UserEntity> {
+    const user = await this.findOne(id, companyId);
     if (!user) {
       throw new NotFoundException(AuthErrorCodes.UserNotFoundError);
     }

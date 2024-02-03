@@ -6,14 +6,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
 import { AuthErrorCodes } from 'src/auth/errors';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { UserEntity } from 'src/user/entities';
 import { UserService } from 'src/user/user.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
+import { CompaniesService } from 'src/companies/companies.service';
 
 import { AssignRoleToUserDto, CreateRoleDto } from './dtos';
 import { RoleEntity } from './entities';
 import { UpdateRoleDto } from './dtos/update-role.dto';
+import { RoleErrorCodes } from './errors';
 
 @Injectable()
 export class RolesService {
@@ -23,15 +25,22 @@ export class RolesService {
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
     private readonly usersService: UserService,
+    private readonly companiesService: CompaniesService,
     private readonly permissionsService: PermissionsService,
   ) {}
 
-  async findOneRoleOrFail(id: number): Promise<RoleEntity | null> {
+  async findOneRoleOrFail(
+    id: number,
+    companyId?: number,
+  ): Promise<RoleEntity | null> {
     const role = await this.roleRepository.findOne({
       relations: {
         permissions: true,
       },
-      where: { id: id },
+      where: {
+        id,
+        ...(companyId ? { company: { id: companyId } } : { company: IsNull() }),
+      },
     });
     if (!role) {
       throw new NotFoundException(AuthErrorCodes.RoleNotFoundError);
@@ -53,10 +62,12 @@ export class RolesService {
   async checkRoleNameAvailability(
     id: number | null,
     name: string,
+    companyId?: number,
   ): Promise<boolean> {
     return await this.roleRepository.exist({
       where: {
         ...(id ? { id: Not(id) } : {}),
+        ...(companyId ? { company: { id: companyId } } : { company: IsNull() }),
         name,
       },
     });
@@ -65,8 +76,13 @@ export class RolesService {
   async checkRoleNameAvailabilityAndFail(
     id: number | null,
     name: string,
+    companyId?: number,
   ): Promise<void> {
-    const roleExists = await this.checkRoleNameAvailability(id, name);
+    const roleExists = await this.checkRoleNameAvailability(
+      id,
+      name,
+      companyId,
+    );
 
     if (roleExists) {
       throw new BadRequestException(AuthErrorCodes.RoleNameAlreadyExistsError);
@@ -77,7 +93,8 @@ export class RolesService {
     userId: string,
     dto: CreateRoleDto,
   ): Promise<RoleEntity> {
-    await this.checkRoleNameAvailabilityAndFail(null, dto.name);
+    await this.companiesService.findOneOrFail(dto.companyId);
+    await this.checkRoleNameAvailabilityAndFail(null, dto.name, dto.companyId);
     const permissions = await this.permissionsService.findBulkPermissions(
       dto.permissionIds,
     );
@@ -88,14 +105,16 @@ export class RolesService {
     const role = this.roleRepository.create({
       ...dto,
       permissions,
+      ...(dto.companyId
+        ? { company: { id: dto.companyId } }
+        : { company: null }),
     });
 
-    const role1 = await this.roleRepository.save(role);
-    return role1;
+    return await this.roleRepository.save(role);
   }
 
   async update(
-    userId: string,
+    user: UserEntity,
     id: number,
     dto: UpdateRoleDto,
   ): Promise<RoleEntity> {
@@ -105,11 +124,14 @@ export class RolesService {
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
+      user.id,
       permissions,
     );
 
     const beforeRole = await this.findOneRoleOrFail(id);
+    if (beforeRole.company.id !== user.company.id) {
+      throw new NotFoundException(RoleErrorCodes.RoleNotFoundError);
+    }
     const role = this.roleRepository.create({
       ...beforeRole,
       ...dto,
@@ -121,18 +143,21 @@ export class RolesService {
     return await this.roleRepository.save(role);
   }
 
-  async delete(id: number) {
-    await this.findOneRoleOrFail(id);
+  async delete(user: UserEntity, id: number) {
+    await this.findOneRoleOrFail(id, user.company.id);
     return await this.roleRepository.delete({ id });
   }
 
-  async assignRole(userId: string, dto: AssignRoleToUserDto) {
-    const user = await this.usersService.findOneOrFail(dto.userId);
-    const role = await this.findOneRoleOrFail(dto.roleId);
-    user.role = role;
+  async assignRole(user: UserEntity, dto: AssignRoleToUserDto) {
+    const assignee = await this.usersService.findOneOrFail(
+      dto.userId,
+      user.company.id,
+    );
+    const role = await this.findOneRoleOrFail(dto.roleId, user.company.id);
+    assignee.role = role;
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
-      user.role.permissions,
+      user.id,
+      assignee.role.permissions,
     );
     return await this.usersRepository.save(user);
   }

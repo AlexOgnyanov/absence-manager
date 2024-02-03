@@ -5,9 +5,11 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { UserEntity } from 'src/user/entities';
 import { PermissionEntity } from 'src/permissions/entities';
+import { CompanyEntity } from 'src/companies/entities';
 
 @Entity('role')
 export class RoleEntity {
@@ -21,10 +23,16 @@ export class RoleEntity {
 
   @ManyToMany(() => PermissionEntity, (permission) => permission.roles, {
     onDelete: 'CASCADE',
+    eager: true,
   })
   @JoinTable()
   permissions?: PermissionEntity[];
 
   @OneToMany(() => UserEntity, (user) => user.role)
   users?: UserEntity[];
+
+  @ManyToOne(() => CompanyEntity, (company) => company.roles, {
+    nullable: true,
+  })
+  company: CompanyEntity;
 }

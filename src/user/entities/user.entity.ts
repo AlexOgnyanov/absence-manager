@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { RoleEntity } from 'src/roles/entities';
+import { CompanyEntity } from 'src/companies/entities';
 
 @Entity('user')
 export class UserEntity {
@@ -43,4 +44,9 @@ export class UserEntity {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: string;
+
+  @ManyToOne(() => CompanyEntity, (company) => company.employees, {
+    nullable: true,
+  })
+  company: CompanyEntity;
 }

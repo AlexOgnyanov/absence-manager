@@ -4,6 +4,7 @@ import { PermissionEntity } from 'src/permissions/entities/permission.entity';
 import { UserEntity } from 'src/user/entities';
 import { UserModule } from 'src/user/user.module';
 import { PermissionsModule } from 'src/permissions/permissions.module';
+import { CompaniesModule } from 'src/companies/companies.module';
 
 import { RolesService } from './roles.service';
 import { RolesController } from './roles.controller';
@@ -14,6 +15,7 @@ import { RoleEntity } from './entities';
     TypeOrmModule.forFeature([UserEntity, PermissionEntity, RoleEntity]),
     UserModule,
     PermissionsModule,
+    CompaniesModule,
   ],
   controllers: [RolesController],
   providers: [RolesService],

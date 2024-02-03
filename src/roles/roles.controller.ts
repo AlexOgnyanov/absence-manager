@@ -74,7 +74,7 @@ export class RolesController {
     @Param('id') id: number,
     @Body() dto: UpdateRoleDto,
   ): Promise<RoleEntity> {
-    return await this.rolesService.update(req.user.id, id, dto);
+    return await this.rolesService.update(req.user, id, dto);
   }
 
   @ApiResponse({
@@ -83,8 +83,8 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Delete, PermissionObject.Role])
   @Delete(':id')
-  async deleteRole(@Param('id') id: number) {
-    return await this.rolesService.delete(id);
+  async deleteRole(@Request() req: RequestWithUser, @Param('id') id: number) {
+    return await this.rolesService.delete(req.user, id);
   }
 
   @CheckPermissions([PermissionAction.Update, PermissionObject.User])
@@ -93,6 +93,6 @@ export class RolesController {
     @Request() req: RequestWithUser,
     @Body() dto: AssignRoleToUserDto,
   ) {
-    return await this.rolesService.assignRole(req.user.id, dto);
+    return await this.rolesService.assignRole(req.user, dto);
   }
 }
