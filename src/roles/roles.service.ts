@@ -90,7 +90,7 @@ export class RolesService {
   }
 
   async createRoleOrFail(
-    userId: string,
+    user: UserEntity,
     dto: CreateRoleDto,
   ): Promise<RoleEntity> {
     await this.companiesService.findOneOrFail(dto.companyId);
@@ -99,7 +99,7 @@ export class RolesService {
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
+      user,
       permissions,
     );
     const role = this.roleRepository.create({
@@ -124,7 +124,7 @@ export class RolesService {
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      user.id,
+      user,
       permissions,
     );
 
@@ -151,14 +151,19 @@ export class RolesService {
   async assignRole(user: UserEntity, dto: AssignRoleToUserDto) {
     const assignee = await this.usersService.findOneOrFail(
       dto.userId,
-      user.company.id,
+      user.company?.id,
     );
-    const role = await this.findOneRoleOrFail(dto.roleId, user.company.id);
+    const role = await this.findOneRoleOrFail(dto.roleId, user.company?.id);
+    if (role.company.id !== assignee.company.id) {
+      throw new BadRequestException(
+        RoleErrorCodes.CannotAssignRoleToUserInDifferentCompanyError,
+      );
+    }
     assignee.role = role;
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      user.id,
+      user,
       assignee.role.permissions,
     );
-    return await this.usersRepository.save(user);
+    return await this.usersRepository.save(assignee);
   }
 }

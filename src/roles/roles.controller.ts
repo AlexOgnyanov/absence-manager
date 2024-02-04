@@ -38,7 +38,7 @@ export class RolesController {
     @Request() req: RequestWithUser,
     @Body() dto: CreateRoleDto,
   ): Promise<RoleEntity> {
-    return await this.rolesService.createRoleOrFail(req.user.id, dto);
+    return await this.rolesService.createRoleOrFail(req.user, dto);
   }
 
   @ApiResponse({

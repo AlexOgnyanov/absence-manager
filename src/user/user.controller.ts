@@ -9,7 +9,7 @@ import {
   Request,
   Get,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, PermissionsGuard } from 'src/auth/guards';
 import { RequestWithUser } from 'src/auth/dtos';
 import { CheckPermissions } from 'src/auth/decorators';
@@ -36,6 +36,12 @@ export class UserController {
     return await this.userService.create(dto);
   }
 
+  @CheckPermissions([PermissionAction.Read, PermissionObject.User])
+  @Get()
+  async findAll(@Request() req: RequestWithUser) {
+    return await this.userService.findAll(req.user);
+  }
+
   @CheckPermissions([PermissionAction.Update, PermissionObject.User])
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -46,5 +52,15 @@ export class UserController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.userService.delete(id);
+  }
+
+  @ApiBody({ type: CreateUserDto })
+  @CheckPermissions([PermissionAction.Create, PermissionObject.User])
+  @Post('create-employee')
+  async createEmployee(
+    @Request() req: RequestWithUser,
+    @Body() dto: CreateUserDto,
+  ) {
+    return await this.userService.createEmployee(req.user, dto);
   }
 }
