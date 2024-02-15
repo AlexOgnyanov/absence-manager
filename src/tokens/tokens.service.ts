@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { customAlphabet } from 'nanoid';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
+import { UserEntity } from 'src/user/entities';
 
 import { TokenErrorCodes } from './errors';
 import {
@@ -58,7 +59,11 @@ export class TokensService {
       },
       expiresAt: new Date(
         Date.now() +
-          ms(this.configService.get<string>('PASSWORD_RESET_TOKEN_EXPIRATION')),
+          ms(
+            this.configService.get<string>(
+              'EMAIL_CONFIRMATION_TOKEN_EXPIRATION',
+            ),
+          ),
       ),
     });
 
@@ -67,5 +72,87 @@ export class TokensService {
 
   async deleteEmailConfirmationToken(token: EmailConfirmationTokenEntity) {
     return await this.emailConfirmationTokenRepository.delete(token);
+  }
+
+  async findPasswordResetToken(token: string) {
+    return await this.passwordResetTokenRepository.findOne({
+      where: {
+        token,
+      },
+    });
+  }
+
+  async findPasswordResetTokenOrFail(token: string) {
+    const tokenEntity = await this.findPasswordResetToken(token);
+
+    if (!tokenEntity) {
+      throw new BadRequestException(
+        TokenErrorCodes.TokenNotFoundOrExpiredError,
+      );
+    }
+
+    return tokenEntity;
+  }
+
+  async generatePasswordResetToken(userId: string) {
+    const token = this.customNanoid();
+    const tokenEntity = this.passwordResetTokenRepository.create({
+      token,
+      user: {
+        id: userId,
+      },
+      expiresAt: new Date(
+        Date.now() +
+          ms(this.configService.get<string>('PASSWORD_RESET_TOKEN_EXPIRATION')),
+      ),
+    });
+
+    return await this.passwordResetTokenRepository.save(tokenEntity);
+  }
+
+  async deletePasswordResetToken(token: PasswordResetTokenEntity) {
+    return await this.passwordResetTokenRepository.delete(token);
+  }
+
+  async findPasswordChangeToken(token: string) {
+    return await this.passwordChangeTokenRepository.findOne({
+      where: {
+        token,
+      },
+    });
+  }
+
+  async findPasswordChangeTokenOrFail(token: string) {
+    const tokenEntity = await this.findPasswordChangeToken(token);
+
+    if (!tokenEntity) {
+      throw new BadRequestException(
+        TokenErrorCodes.TokenNotFoundOrExpiredError,
+      );
+    }
+
+    return tokenEntity;
+  }
+
+  async generatePasswordChangeToken(user: UserEntity) {
+    const token = this.customNanoid();
+    const tokenEntity = this.passwordChangeTokenRepository.create({
+      token,
+      user: {
+        id: user.id,
+      },
+      expiresAt: new Date(
+        Date.now() +
+          ms(
+            this.configService.get<string>('PASSWORD_CHANGE_TOKEN_EXPIRATION'),
+          ),
+      ),
+    });
+
+    return await this.passwordChangeTokenRepository.save(tokenEntity);
+  }
+
+  async deletePasswordChangeToken(token: PasswordChangeTokenEntity) {
+    return await this.passwordChangeTokenRepository.delete(token);
   }
 }

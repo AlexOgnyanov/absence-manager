@@ -43,10 +43,7 @@ export class SendgridService {
     await this.sendEmail(mail);
   }
 
-  async sendPasswordChangeVerification(
-    email: string,
-    token: string,
-  ): Promise<void> {
+  async sendPasswordChange(email: string, token: string): Promise<void> {
     const mail: MailDataRequired = {
       from: this.configService.get<string>('EMAIL_SENDER_ADDRESS'),
       templateId: Templates.PasswordChange,
