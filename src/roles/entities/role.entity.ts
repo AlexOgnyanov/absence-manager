@@ -16,9 +16,7 @@ export class RoleEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({
-    unique: true,
-  })
+  @Column()
   name: string;
 
   @ManyToMany(() => PermissionEntity, (permission) => permission.roles, {

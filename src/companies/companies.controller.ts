@@ -9,7 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, PermissionsGuard } from 'src/auth/guards';
+import {
+  GlobalAdminGuard,
+  JwtAuthGuard,
+  PermissionsGuard,
+} from 'src/auth/guards';
 import { CheckPermissions } from 'src/auth/decorators';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
@@ -19,7 +23,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @ApiBearerAuth('AccessToken')
 @ApiTags('Companies')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, GlobalAdminGuard)
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}

@@ -47,8 +47,14 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get(':id')
-  async findOneRole(@Param('id') id: number): Promise<RoleEntity | null> {
-    return await this.rolesService.findOneRoleOrFail(id);
+  async findOneRole(
+    @Request() req: RequestWithUser,
+    @Param('id') id: number,
+  ): Promise<RoleEntity | null> {
+    return await this.rolesService.findOneRoleOrFail(
+      id,
+      req.user?.company?.id || req.user?.ownedCompany?.id,
+    );
   }
 
   @ApiResponse({
@@ -58,9 +64,10 @@ export class RolesController {
   @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get()
   async findAllRoles(
+    @Request() req: RequestWithUser,
     @Paginate() query: PaginateQuery,
   ): Promise<Paginated<RoleEntity>> {
-    return await this.rolesService.findAllRoles(query);
+    return await this.rolesService.findAllRoles(req.user, query);
   }
 
   @ApiResponse({

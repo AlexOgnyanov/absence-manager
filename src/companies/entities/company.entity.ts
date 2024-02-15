@@ -32,9 +32,7 @@ export class CompanyEntity {
   @JoinColumn({ name: 'ownerId' })
   owner: UserEntity;
 
-  @OneToMany(() => UserEntity, (user) => user.company, {
-    eager: true,
-  })
+  @OneToMany(() => UserEntity, (user) => user.company, {})
   employees: UserEntity[];
 
   @OneToMany(() => RoleEntity, (role) => role.company, {

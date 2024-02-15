@@ -48,8 +48,17 @@ export class RolesService {
     return role;
   }
 
-  async findAllRoles(query: PaginateQuery): Promise<Paginated<RoleEntity>> {
+  async findAllRoles(
+    user: UserEntity,
+    query: PaginateQuery,
+  ): Promise<Paginated<RoleEntity>> {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
     return await paginate(query, this.roleRepository, {
+      where: {
+        ...(userCompany
+          ? { company: { id: userCompany } }
+          : { company: IsNull() }),
+      },
       defaultSortBy: [['name', 'ASC']],
       sortableColumns: ['name'],
       searchableColumns: ['name'],
