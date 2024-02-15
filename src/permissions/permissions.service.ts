@@ -41,6 +41,17 @@ export class PermissionsService {
       },
     });
   }
+  async findBulkPermissionsOrFail(permissionIds: number[]) {
+    const permissions = await this.findBulkPermissions(permissionIds);
+
+    if (permissions.length !== permissionIds.length) {
+      throw new BadRequestException(
+        PermissionErrorCodes.PermissionNotFoundError,
+      );
+    }
+
+    return permissions;
+  }
 
   async doesUserExceedPermissions(user: UserEntity, dto: CreatePermissionDto) {
     const ability = await this.abilityFactory.createForUser(user);

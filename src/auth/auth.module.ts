@@ -9,6 +9,8 @@ import { PermissionEntity } from 'src/permissions/entities';
 import { RoleEntity } from 'src/roles/entities';
 import { PermissionsModule } from 'src/permissions/permissions.module';
 import { UserModule } from 'src/user/user.module';
+import { SendgridModule } from 'src/sendgrid/sendgrid.module';
+import { TokensModule } from 'src/tokens/tokens.module';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -22,6 +24,8 @@ import { JwtAuthGuard, PermissionsGuard } from './guards';
     PassportModule,
     UserModule,
     PermissionsModule,
+    SendgridModule,
+    TokensModule,
   ],
   controllers: [AuthController],
   providers: [

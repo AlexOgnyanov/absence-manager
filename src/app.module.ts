@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { RolesModule } from './roles/roles.module';
 import { CompaniesModule } from './companies/companies.module';
+import { TokensModule } from './tokens/tokens.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CompaniesModule } from './companies/companies.module';
     RolesModule,
     PermissionsModule,
     CompaniesModule,
+    TokensModule,
   ],
   providers: [
     {

@@ -15,7 +15,7 @@ import { RequestWithUser } from 'src/auth/dtos';
 import { CheckPermissions } from 'src/auth/decorators';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
-import { CreateUserDto, UpdateUserDto } from './dtos';
+import { CreateEmployeeDto, CreateUserDto, UpdateUserDto } from './dtos';
 import { UserService } from './user.service';
 
 @ApiBearerAuth('AccessToken')
@@ -54,12 +54,12 @@ export class UserController {
     return await this.userService.delete(id);
   }
 
-  @ApiBody({ type: CreateUserDto })
+  @ApiBody({ type: CreateEmployeeDto })
   @CheckPermissions([PermissionAction.Create, PermissionObject.User])
   @Post('create-employee')
   async createEmployee(
     @Request() req: RequestWithUser,
-    @Body() dto: CreateUserDto,
+    @Body() dto: CreateEmployeeDto,
   ) {
     return await this.userService.createEmployee(req.user, dto);
   }

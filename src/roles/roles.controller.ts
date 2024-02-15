@@ -34,11 +34,11 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Create, PermissionObject.Role])
   @Post()
-  async createRole(
+  async create(
     @Request() req: RequestWithUser,
     @Body() dto: CreateRoleDto,
   ): Promise<RoleEntity> {
-    return await this.rolesService.createRoleOrFail(req.user, dto);
+    return await this.rolesService.create(req.user, dto);
   }
 
   @ApiResponse({

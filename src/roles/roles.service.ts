@@ -15,7 +15,6 @@ import { CompaniesService } from 'src/companies/companies.service';
 import { AssignRoleToUserDto, CreateRoleDto } from './dtos';
 import { RoleEntity } from './entities';
 import { UpdateRoleDto } from './dtos/update-role.dto';
-import { RoleErrorCodes } from './errors';
 
 @Injectable()
 export class RolesService {
@@ -45,6 +44,7 @@ export class RolesService {
     if (!role) {
       throw new NotFoundException(AuthErrorCodes.RoleNotFoundError);
     }
+
     return role;
   }
 
@@ -89,25 +89,26 @@ export class RolesService {
     }
   }
 
-  async createRoleOrFail(
-    user: UserEntity,
-    dto: CreateRoleDto,
-  ): Promise<RoleEntity> {
-    await this.companiesService.findOneOrFail(dto.companyId);
-    await this.checkRoleNameAvailabilityAndFail(null, dto.name, dto.companyId);
-    const permissions = await this.permissionsService.findBulkPermissions(
+  async create(user: UserEntity, dto: CreateRoleDto): Promise<RoleEntity> {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+    if (userCompany) {
+      await this.companiesService.findOneOrFail(userCompany);
+    }
+
+    await this.checkRoleNameAvailabilityAndFail(null, dto.name, userCompany);
+
+    const permissions = await this.permissionsService.findBulkPermissionsOrFail(
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
       user,
       permissions,
     );
+
     const role = this.roleRepository.create({
       ...dto,
       permissions,
-      ...(dto.companyId
-        ? { company: { id: dto.companyId } }
-        : { company: null }),
+      ...(userCompany ? { company: { id: userCompany } } : { company: null }),
     });
 
     return await this.roleRepository.save(role);
@@ -128,10 +129,8 @@ export class RolesService {
       permissions,
     );
 
-    const beforeRole = await this.findOneRoleOrFail(id);
-    if (beforeRole.company.id !== user.company.id) {
-      throw new NotFoundException(RoleErrorCodes.RoleNotFoundError);
-    }
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+    const beforeRole = await this.findOneRoleOrFail(id, userCompany);
     const role = this.roleRepository.create({
       ...beforeRole,
       ...dto,
@@ -144,21 +143,20 @@ export class RolesService {
   }
 
   async delete(user: UserEntity, id: number) {
-    await this.findOneRoleOrFail(id, user.company.id);
+    await this.findOneRoleOrFail(
+      id,
+      user?.company?.id || user?.ownedCompany?.id,
+    );
     return await this.roleRepository.delete({ id });
   }
 
   async assignRole(user: UserEntity, dto: AssignRoleToUserDto) {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
     const assignee = await this.usersService.findOneOrFail(
       dto.userId,
-      user.company?.id,
+      userCompany,
     );
-    const role = await this.findOneRoleOrFail(dto.roleId, user.company?.id);
-    if (role.company.id !== assignee.company.id) {
-      throw new BadRequestException(
-        RoleErrorCodes.CannotAssignRoleToUserInDifferentCompanyError,
-      );
-    }
+    const role = await this.findOneRoleOrFail(dto.roleId, userCompany);
     assignee.role = role;
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
       user,
