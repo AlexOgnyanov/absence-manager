@@ -15,7 +15,4 @@ export class EmailConfirmationTokenEntity {
     eager: true,
   })
   user: UserEntity;
-
-  @Column({ type: 'timestamptz' })
-  expiresAt: Date;
 }

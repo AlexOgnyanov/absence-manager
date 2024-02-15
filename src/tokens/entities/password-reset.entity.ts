@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 
 import { UserEntity } from '../../user/entities/user.entity';
 
@@ -18,4 +24,7 @@ export class PasswordResetTokenEntity {
 
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
 }
