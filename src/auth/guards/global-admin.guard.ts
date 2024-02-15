@@ -9,7 +9,6 @@ export class GlobalAdminGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: RequestWithUser = context.switchToHttp().getRequest();
-    console.log(!!(req.user?.company?.id || req.user?.ownedCompany?.id));
 
     return !(req.user?.company?.id || req.user?.ownedCompany?.id);
   }

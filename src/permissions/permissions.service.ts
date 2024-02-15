@@ -41,6 +41,7 @@ export class PermissionsService {
       },
     });
   }
+
   async findBulkPermissionsOrFail(permissionIds: number[]) {
     const permissions = await this.findBulkPermissions(permissionIds);
 
@@ -123,6 +124,18 @@ export class PermissionsService {
       throw new NotFoundException(AuthErrorCodes.PermissionNotFoundError);
     }
     return permissions;
+  }
+
+  async findPermissionByActionAndObject(
+    action: PermissionAction,
+    object: PermissionObject,
+  ) {
+    return await this.permissionRepository.findOne({
+      where: {
+        action,
+        object,
+      },
+    });
   }
 
   async validatePermissionDoesNotExist(

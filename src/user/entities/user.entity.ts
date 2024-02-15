@@ -74,10 +74,15 @@ export class UserEntity {
 
   @ManyToOne(() => CompanyEntity, (company) => company.employees, {
     nullable: true,
+    onDelete: 'CASCADE',
+    cascade: true,
   })
   company: CompanyEntity;
 
-  @OneToOne(() => CompanyEntity, (company) => company.owner)
+  @OneToOne(() => CompanyEntity, (company) => company.owner, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
   ownedCompany: CompanyEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })

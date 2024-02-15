@@ -31,6 +31,7 @@ export class RoleEntity {
 
   @ManyToOne(() => CompanyEntity, (company) => company.roles, {
     nullable: true,
+    onDelete: 'CASCADE',
   })
   company: CompanyEntity;
 }

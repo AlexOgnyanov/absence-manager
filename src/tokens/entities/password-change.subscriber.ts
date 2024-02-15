@@ -34,7 +34,6 @@ export class PasswordChangeSubscriber
     const expiresAfter = ms(
       this.configService.get<string>('PASSWORD_CHANGE_TOKEN_EXPIRATION'),
     );
-    console.log(event.entity);
     await this.tasksService.scheduleDeleteExpiredPasswordChangeToken(
       event.entity,
       expiresAfter,

@@ -13,6 +13,7 @@ export class EmailConfirmationTokenEntity {
   @ManyToOne(() => UserEntity, (user) => user.emailConfirmationTokens, {
     cascade: true,
     eager: true,
+    onDelete: 'CASCADE',
   })
   user: UserEntity;
 }

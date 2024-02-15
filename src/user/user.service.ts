@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 import {
   BadRequestException,
   Injectable,
@@ -123,13 +121,19 @@ export class UserService {
 
   async createOwnerUser(contactEmail: string) {
     await this.checkEmailOrFail(contactEmail);
-    const randomPassword = randomBytes(10).toString('hex');
     const user = this.userRepository.create({
       email: contactEmail,
-      password: randomPassword,
+      password: null,
     });
 
-    return await this.userRepository.save(user);
+    const userEntity = await this.userRepository.save(user);
+    const token = await this.tokensService.generateEmailConfirmationToken(
+      userEntity.id,
+    );
+
+    await this.sendgridService.sendEmailVerification(user.email, token.token);
+
+    return userEntity;
   }
 
   async createEmployee(user: UserEntity, dto: CreateEmployeeDto) {

@@ -19,6 +19,7 @@ export class PasswordResetTokenEntity {
   @ManyToOne(() => UserEntity, (user) => user.passwordResetTokens, {
     cascade: true,
     eager: true,
+    onDelete: 'CASCADE',
   })
   user: UserEntity;
 

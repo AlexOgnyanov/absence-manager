@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { RolesService } from 'src/roles/roles.service';
+import { PermissionsService } from 'src/permissions/permissions.service';
+import { PermissionAction, PermissionObject } from 'src/permissions/enums';
+import { RoleEntity } from 'src/roles/entities';
 
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -11,27 +20,52 @@ import { CompanyErrorCodes } from './errors';
 @Injectable()
 export class CompaniesService {
   constructor(
+    @InjectRepository(RoleEntity)
+    private readonly roleRepository: Repository<RoleEntity>,
     @InjectRepository(CompanyEntity)
-    private companyEntityRepository: Repository<CompanyEntity>,
-    private userService: UserService,
+    private readonly companyRepository: Repository<CompanyEntity>,
+    private readonly userService: UserService,
+    private readonly permissionsService: PermissionsService,
+
+    @Inject(forwardRef(() => RolesService))
+    private readonly rolesService: RolesService,
   ) {}
 
   async create(dto: CreateCompanyDto) {
     const owner = await this.userService.createOwnerUser(dto.ownerContactEmail);
-    const company = this.companyEntityRepository.create({
+    const company = this.companyRepository.create({
       ...dto,
       owner,
     });
 
-    return await this.companyEntityRepository.save(company);
+    const companyEntity = await this.companyRepository.save(company);
+
+    const permission =
+      await this.permissionsService.findPermissionByActionAndObject(
+        PermissionAction.Manage,
+        PermissionObject.All,
+      );
+
+    const role = this.roleRepository.create({
+      name: 'owner',
+      company: {
+        id: companyEntity.id,
+      },
+      permissions: [permission],
+      users: [owner],
+    });
+
+    await this.roleRepository.save(role);
+
+    return companyEntity;
   }
 
   async findAll() {
-    return await this.companyEntityRepository.find();
+    return await this.companyRepository.find();
   }
 
   async findOne(id: number) {
-    return await this.companyEntityRepository.findOne({
+    return await this.companyRepository.findOne({
       where: {
         id,
       },
@@ -49,10 +83,10 @@ export class CompaniesService {
   }
 
   async update(id: number, dto: UpdateCompanyDto) {
-    return await this.companyEntityRepository.update(id, { ...dto });
+    return await this.companyRepository.update(id, { ...dto });
   }
 
   async delete(id: number) {
-    return await this.companyEntityRepository.delete(id);
+    return await this.companyRepository.delete(id);
   }
 }

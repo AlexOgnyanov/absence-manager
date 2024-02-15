@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
@@ -24,6 +26,7 @@ export class RolesService {
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
     private readonly usersService: UserService,
+    @Inject(forwardRef(() => CompaniesService))
     private readonly companiesService: CompaniesService,
     private readonly permissionsService: PermissionsService,
   ) {}
