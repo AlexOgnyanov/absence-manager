@@ -9,7 +9,6 @@ import { customAlphabet } from 'nanoid';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
 import { UserEntity } from 'src/user/entities';
-import { SchedulerRegistry } from '@nestjs/schedule';
 
 import { TokenErrorCodes } from './errors';
 import {
@@ -30,8 +29,7 @@ export class TokensService {
     private passwordChangeTokenRepository: Repository<PasswordChangeTokenEntity>,
     @InjectRepository(EmailConfirmationTokenEntity)
     private emailConfirmationTokenRepository: Repository<EmailConfirmationTokenEntity>,
-    private readonly schedulerRegistry: SchedulerRegistry,
-    private configService: ConfigService,
+    private readonly configService: ConfigService,
   ) {
     this.customNanoid = customAlphabet(this.alphabet, 8);
   }
@@ -132,17 +130,7 @@ export class TokensService {
       expiresAt: new Date(Date.now() + expiresAfter),
     });
 
-    const savedToken =
-      await this.passwordResetTokenRepository.save(tokenEntity);
-
-    const callback = async () => {
-      await this.deletePasswordResetToken(savedToken);
-    };
-
-    const timeout = setTimeout(callback, expiresAfter);
-    this.schedulerRegistry.addTimeout(`${token}_password_reset_token`, timeout);
-
-    return savedToken;
+    return await this.passwordResetTokenRepository.save(tokenEntity);
   }
 
   async deletePasswordResetToken(token: PasswordResetTokenEntity) {
@@ -208,23 +196,37 @@ export class TokensService {
       expiresAt: new Date(Date.now() + expiresAfter),
     });
 
-    const savedToken =
-      await this.passwordChangeTokenRepository.save(tokenEntity);
-
-    const callback = async () => {
-      await this.deletePasswordChangeToken(savedToken);
-    };
-
-    const timeout = setTimeout(callback, expiresAfter);
-    this.schedulerRegistry.addTimeout(
-      `${token}_password_change_token`,
-      timeout,
-    );
-
-    return savedToken;
+    return await this.passwordChangeTokenRepository.save(tokenEntity);
   }
 
   async deletePasswordChangeToken(token: PasswordChangeTokenEntity) {
     return await this.passwordChangeTokenRepository.delete(token);
+  }
+
+  async clearExpiredPasswordResetTokens() {
+    return await this.passwordResetTokenRepository
+      .createQueryBuilder('token')
+      .delete()
+      .from(PasswordResetTokenEntity)
+      .where('"password_reset_token"."expiresAt" <= :currentDate', {
+        currentDate: new Date(Date.now()),
+      })
+      .execute();
+  }
+
+  async clearExpiredPasswordChangeTokens() {
+    return await this.passwordChangeTokenRepository
+      .createQueryBuilder('token')
+      .delete()
+      .from(PasswordChangeTokenEntity)
+      .where('"password_change_token"."expiresAt" <= :currentDate', {
+        currentDate: new Date(Date.now()),
+      })
+      .execute();
+  }
+
+  async clearExpiredTokens() {
+    await this.clearExpiredPasswordChangeTokens();
+    await this.clearExpiredPasswordResetTokens();
   }
 }
