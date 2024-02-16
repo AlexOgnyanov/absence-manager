@@ -37,7 +37,7 @@ export class PermissionsController {
     @Request() req: RequestWithUser,
     @Body() dto: CreatePermissionDto,
   ): Promise<PermissionEntity> {
-    return await this.permissionsService.createPermission(req.user.id, dto);
+    return await this.permissionsService.createPermission(req.user, dto);
   }
 
   @Get('options')
@@ -80,7 +80,7 @@ export class PermissionsController {
     @Param('id') id: number,
     @Body() dto: UpdatePermissionDto,
   ): Promise<PermissionEntity> {
-    return await this.permissionsService.updatePermission(req.user.id, id, dto);
+    return await this.permissionsService.updatePermission(req.user, id, dto);
   }
 
   @ApiResponse({

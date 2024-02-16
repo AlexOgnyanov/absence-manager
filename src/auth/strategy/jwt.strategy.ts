@@ -1,10 +1,11 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user/user.service';
 
 import { ContextUser } from '../dtos';
+import { AuthErrorCodes } from '../errors';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -20,6 +21,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: ContextUser) {
-    return await this.userService.findOne(payload.id);
+    const user = await this.userService.findOne(payload.id);
+    if (!user.isVerified) {
+      throw new BadRequestException(AuthErrorCodes.AccountNotVerifiedError);
+    }
+
+    return user;
   }
 }

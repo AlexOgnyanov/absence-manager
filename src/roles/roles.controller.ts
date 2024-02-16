@@ -34,11 +34,11 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Create, PermissionObject.Role])
   @Post()
-  async createRole(
+  async create(
     @Request() req: RequestWithUser,
     @Body() dto: CreateRoleDto,
   ): Promise<RoleEntity> {
-    return await this.rolesService.createRoleOrFail(req.user.id, dto);
+    return await this.rolesService.create(req.user, dto);
   }
 
   @ApiResponse({
@@ -47,8 +47,14 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get(':id')
-  async findOneRole(@Param('id') id: number): Promise<RoleEntity | null> {
-    return await this.rolesService.findOneRoleOrFail(id);
+  async findOneRole(
+    @Request() req: RequestWithUser,
+    @Param('id') id: number,
+  ): Promise<RoleEntity | null> {
+    return await this.rolesService.findOneRoleOrFail(
+      id,
+      req.user?.company?.id || req.user?.ownedCompany?.id,
+    );
   }
 
   @ApiResponse({
@@ -58,9 +64,10 @@ export class RolesController {
   @CheckPermissions([PermissionAction.Read, PermissionObject.Role])
   @Get()
   async findAllRoles(
+    @Request() req: RequestWithUser,
     @Paginate() query: PaginateQuery,
   ): Promise<Paginated<RoleEntity>> {
-    return await this.rolesService.findAllRoles(query);
+    return await this.rolesService.findAllRoles(req.user, query);
   }
 
   @ApiResponse({
@@ -74,7 +81,7 @@ export class RolesController {
     @Param('id') id: number,
     @Body() dto: UpdateRoleDto,
   ): Promise<RoleEntity> {
-    return await this.rolesService.update(req.user.id, id, dto);
+    return await this.rolesService.update(req.user, id, dto);
   }
 
   @ApiResponse({
@@ -83,8 +90,8 @@ export class RolesController {
   })
   @CheckPermissions([PermissionAction.Delete, PermissionObject.Role])
   @Delete(':id')
-  async deleteRole(@Param('id') id: number) {
-    return await this.rolesService.delete(id);
+  async deleteRole(@Request() req: RequestWithUser, @Param('id') id: number) {
+    return await this.rolesService.delete(req.user, id);
   }
 
   @CheckPermissions([PermissionAction.Update, PermissionObject.User])
@@ -93,6 +100,6 @@ export class RolesController {
     @Request() req: RequestWithUser,
     @Body() dto: AssignRoleToUserDto,
   ) {
-    return await this.rolesService.assignRole(req.user.id, dto);
+    return await this.rolesService.assignRole(req.user, dto);
   }
 }

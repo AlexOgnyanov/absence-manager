@@ -19,7 +19,10 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
   }
 
   async beforeUpdate(event: UpdateEvent<UserEntity>): Promise<void> {
-    if (event.entity.password !== event.databaseEntity.password) {
+    if (
+      event?.entity?.password &&
+      event.entity.password !== event.databaseEntity.password
+    ) {
       await this.hashPassword(event.entity as UserEntity);
     }
   }

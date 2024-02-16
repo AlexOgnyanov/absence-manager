@@ -3,6 +3,7 @@ import {
   TypeOrmModuleOptions,
   TypeOrmModuleAsyncOptions,
 } from '@nestjs/typeorm';
+import { UserSubscriber } from 'src/user/entities/user-entity.subscriber';
 
 export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
   useFactory: async (
@@ -19,7 +20,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     password: configService.get<string>('DATABASE_PASSWORD'),
     migrations: [__dirname + '/../migrations/*.ts'],
     entities: [__dirname + '/../**/entities/*.entity{.ts,.js}'],
-    subscribers: [__dirname + '/../**/entities/*.subscriber{.ts,.js}'],
+    subscribers: [UserSubscriber],
   }),
   inject: [ConfigService],
 };

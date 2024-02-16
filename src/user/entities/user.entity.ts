@@ -5,19 +5,31 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { RoleEntity } from 'src/roles/entities';
+import { CompanyEntity } from 'src/companies/entities';
+import {
+  EmailConfirmationTokenEntity,
+  PasswordResetTokenEntity,
+  PasswordChangeTokenEntity,
+} from 'src/tokens/entities';
 
 @Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   firstName: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   lastName: string;
 
   @Column({
@@ -26,7 +38,9 @@ export class UserEntity {
   email: string;
 
   @Exclude()
-  @Column()
+  @Column({
+    nullable: true,
+  })
   password: string;
 
   @Column({
@@ -35,8 +49,41 @@ export class UserEntity {
   })
   phone: string;
 
+  @Column({
+    default: false,
+  })
+  isVerified: boolean;
+
+  @OneToMany(() => EmailConfirmationTokenEntity, (token) => token.user, {
+    nullable: true,
+  })
+  emailConfirmationTokens: EmailConfirmationTokenEntity[];
+
+  @OneToMany(() => PasswordResetTokenEntity, (token) => token.user, {
+    nullable: true,
+  })
+  passwordResetTokens: PasswordResetTokenEntity[];
+
+  @OneToMany(() => PasswordChangeTokenEntity, (token) => token.user, {
+    nullable: true,
+  })
+  passwordChangeTokens: PasswordChangeTokenEntity[];
+
   @ManyToOne(() => RoleEntity, (role) => role.users, { onDelete: 'SET NULL' })
   role: RoleEntity;
+
+  @ManyToOne(() => CompanyEntity, (company) => company.employees, {
+    nullable: true,
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  company: CompanyEntity;
+
+  @OneToOne(() => CompanyEntity, (company) => company.owner, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  ownedCompany: CompanyEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: string;

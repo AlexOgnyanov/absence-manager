@@ -3,8 +3,8 @@ import { IsString, IsNumber, IsNotEmpty, ArrayNotEmpty } from 'class-validator';
 
 export class CreateRoleDto {
   @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   name: string;
 
   @ApiProperty()

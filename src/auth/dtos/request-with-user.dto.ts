@@ -1,5 +1,5 @@
-import { ContextUser } from './context-user.dto';
+import { UserEntity } from 'src/user/entities';
 
 export class RequestWithUser {
-  user: ContextUser;
+  user: UserEntity;
 }

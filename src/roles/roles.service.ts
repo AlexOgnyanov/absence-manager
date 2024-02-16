@@ -1,15 +1,18 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
 import { AuthErrorCodes } from 'src/auth/errors';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { UserEntity } from 'src/user/entities';
 import { UserService } from 'src/user/user.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
+import { CompaniesService } from 'src/companies/companies.service';
 
 import { AssignRoleToUserDto, CreateRoleDto } from './dtos';
 import { RoleEntity } from './entities';
@@ -23,24 +26,42 @@ export class RolesService {
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
     private readonly usersService: UserService,
+    @Inject(forwardRef(() => CompaniesService))
+    private readonly companiesService: CompaniesService,
     private readonly permissionsService: PermissionsService,
   ) {}
 
-  async findOneRoleOrFail(id: number): Promise<RoleEntity | null> {
+  async findOneRoleOrFail(
+    id: number,
+    companyId?: number,
+  ): Promise<RoleEntity | null> {
     const role = await this.roleRepository.findOne({
       relations: {
         permissions: true,
       },
-      where: { id: id },
+      where: {
+        id,
+        ...(companyId ? { company: { id: companyId } } : { company: IsNull() }),
+      },
     });
     if (!role) {
       throw new NotFoundException(AuthErrorCodes.RoleNotFoundError);
     }
+
     return role;
   }
 
-  async findAllRoles(query: PaginateQuery): Promise<Paginated<RoleEntity>> {
+  async findAllRoles(
+    user: UserEntity,
+    query: PaginateQuery,
+  ): Promise<Paginated<RoleEntity>> {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
     return await paginate(query, this.roleRepository, {
+      where: {
+        ...(userCompany
+          ? { company: { id: userCompany } }
+          : { company: IsNull() }),
+      },
       defaultSortBy: [['name', 'ASC']],
       sortableColumns: ['name'],
       searchableColumns: ['name'],
@@ -53,10 +74,12 @@ export class RolesService {
   async checkRoleNameAvailability(
     id: number | null,
     name: string,
+    companyId?: number,
   ): Promise<boolean> {
     return await this.roleRepository.exist({
       where: {
         ...(id ? { id: Not(id) } : {}),
+        ...(companyId ? { company: { id: companyId } } : { company: IsNull() }),
         name,
       },
     });
@@ -65,37 +88,46 @@ export class RolesService {
   async checkRoleNameAvailabilityAndFail(
     id: number | null,
     name: string,
+    companyId?: number,
   ): Promise<void> {
-    const roleExists = await this.checkRoleNameAvailability(id, name);
+    const roleExists = await this.checkRoleNameAvailability(
+      id,
+      name,
+      companyId,
+    );
 
     if (roleExists) {
       throw new BadRequestException(AuthErrorCodes.RoleNameAlreadyExistsError);
     }
   }
 
-  async createRoleOrFail(
-    userId: string,
-    dto: CreateRoleDto,
-  ): Promise<RoleEntity> {
-    await this.checkRoleNameAvailabilityAndFail(null, dto.name);
-    const permissions = await this.permissionsService.findBulkPermissions(
+  async create(user: UserEntity, dto: CreateRoleDto): Promise<RoleEntity> {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+    if (userCompany) {
+      await this.companiesService.findOneOrFail(userCompany);
+    }
+
+    await this.checkRoleNameAvailabilityAndFail(null, dto.name, userCompany);
+
+    const permissions = await this.permissionsService.findBulkPermissionsOrFail(
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
+      user,
       permissions,
     );
+
     const role = this.roleRepository.create({
       ...dto,
       permissions,
+      ...(userCompany ? { company: { id: userCompany } } : { company: null }),
     });
 
-    const role1 = await this.roleRepository.save(role);
-    return role1;
+    return await this.roleRepository.save(role);
   }
 
   async update(
-    userId: string,
+    user: UserEntity,
     id: number,
     dto: UpdateRoleDto,
   ): Promise<RoleEntity> {
@@ -105,11 +137,12 @@ export class RolesService {
       dto.permissionIds,
     );
     await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
+      user,
       permissions,
     );
 
-    const beforeRole = await this.findOneRoleOrFail(id);
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+    const beforeRole = await this.findOneRoleOrFail(id, userCompany);
     const role = this.roleRepository.create({
       ...beforeRole,
       ...dto,
@@ -121,19 +154,26 @@ export class RolesService {
     return await this.roleRepository.save(role);
   }
 
-  async delete(id: number) {
-    await this.findOneRoleOrFail(id);
+  async delete(user: UserEntity, id: number) {
+    await this.findOneRoleOrFail(
+      id,
+      user?.company?.id || user?.ownedCompany?.id,
+    );
     return await this.roleRepository.delete({ id });
   }
 
-  async assignRole(userId: string, dto: AssignRoleToUserDto) {
-    const user = await this.usersService.findOneOrFail(dto.userId);
-    const role = await this.findOneRoleOrFail(dto.roleId);
-    user.role = role;
-    await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
-      userId,
-      user.role.permissions,
+  async assignRole(user: UserEntity, dto: AssignRoleToUserDto) {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+    const assignee = await this.usersService.findOneOrFail(
+      dto.userId,
+      userCompany,
     );
-    return await this.usersRepository.save(user);
+    const role = await this.findOneRoleOrFail(dto.roleId, userCompany);
+    assignee.role = role;
+    await this.permissionsService.doesUserExceeedPermissionsBulkOrFail(
+      user,
+      assignee.role.permissions,
+    );
+    return await this.usersRepository.save(assignee);
   }
 }
