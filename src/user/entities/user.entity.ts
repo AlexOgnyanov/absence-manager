@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToOne,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { RoleEntity } from 'src/roles/entities';
@@ -16,6 +17,7 @@ import {
   PasswordResetTokenEntity,
   PasswordChangeTokenEntity,
 } from 'src/tokens/entities';
+import { DepartmentEntity } from 'src/departments/entities';
 
 @Entity('user')
 export class UserEntity {
@@ -84,6 +86,11 @@ export class UserEntity {
     cascade: true,
   })
   ownedCompany: CompanyEntity;
+
+  @ManyToMany(() => DepartmentEntity, (department) => department.users, {
+    onDelete: 'NO ACTION',
+  })
+  departments: DepartmentEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: string;

@@ -1,3 +1,4 @@
+import { DepartmentEntity } from 'src/departments/entities';
 import { RoleEntity } from 'src/roles/entities';
 import { UserEntity } from 'src/user/entities';
 import {
@@ -40,4 +41,7 @@ export class CompanyEntity {
     eager: true,
   })
   roles: RoleEntity[];
+
+  @OneToMany(() => DepartmentEntity, (department) => department.company)
+  departments: DepartmentEntity[];
 }
