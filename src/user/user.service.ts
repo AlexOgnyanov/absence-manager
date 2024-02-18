@@ -23,14 +23,14 @@ export class UserService {
     private sendgridService: SendgridService,
   ) {}
 
-  async create(dto: CreateUserDto): Promise<UserEntity> {
+  async create(dto: CreateUserDto) {
     await this.checkCredentialsOrFail(dto.email, dto.phone);
     const user = this.userRepository.create({ ...dto });
 
     return await this.userRepository.save(user);
   }
 
-  async findOne(id: string, companyId?: number): Promise<UserEntity> {
+  async findOne(id: string, companyId?: number) {
     return this.userRepository.findOne({
       relations: {
         role: {
@@ -50,7 +50,7 @@ export class UserService {
     });
   }
 
-  async findOneOrFail(id: string, companyId?: number): Promise<UserEntity> {
+  async findOneOrFail(id: string, companyId?: number) {
     const user = await this.findOne(id, companyId);
     if (!user) {
       throw new NotFoundException(AuthErrorCodes.UserNotFoundError);
@@ -77,32 +77,41 @@ export class UserService {
     return await query.getMany();
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<void> {
-    await this.userRepository.update(id, { ...dto });
+  async update(user: UserEntity, id: string, dto: UpdateUserDto) {
+    const userEntity = await this.findOneOrFail(id);
+
+    await this.userRepository.update(id, {
+      ...userEntity,
+      ...dto,
+    });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.userRepository.delete(id);
+  async delete(user: UserEntity, id: string) {
+    const userEntity = await this.findOneOrFail(
+      id,
+      user?.company?.id || user?.ownedCompany?.id,
+    );
+    return await this.userRepository.remove(userEntity);
   }
 
-  async checkCredentialsOrFail(email: string, phone: string): Promise<void> {
+  async checkCredentialsOrFail(email: string, phone: string) {
     await this.checkEmailOrFail(email);
     await this.checkPhoneOrFail(phone);
   }
 
-  async checkEmailOrFail(email: string): Promise<void> {
+  async checkEmailOrFail(email: string) {
     if (await this.isEmailTaken(email)) {
       throw new BadRequestException(UserErrorCodes.EmailTakenError);
     }
   }
 
-  async checkPhoneOrFail(phone: string): Promise<void> {
+  async checkPhoneOrFail(phone: string) {
     if (await this.isPhoneTaken(phone)) {
       throw new BadRequestException(UserErrorCodes.PhoneTakenError);
     }
   }
 
-  async isEmailTaken(email: string): Promise<boolean> {
+  async isEmailTaken(email: string) {
     return await this.userRepository.exist({
       where: {
         email,
@@ -110,7 +119,7 @@ export class UserService {
     });
   }
 
-  async isPhoneTaken(phone: string): Promise<boolean> {
+  async isPhoneTaken(phone: string) {
     if (!phone) return false;
     return await this.userRepository.exist({
       where: {

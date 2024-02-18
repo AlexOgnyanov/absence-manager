@@ -44,14 +44,18 @@ export class UserController {
 
   @CheckPermissions([PermissionAction.Update, PermissionObject.User])
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.userService.update(id, updateUserDto);
+  async update(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.userService.update(req.user, id, updateUserDto);
   }
 
   @CheckPermissions([PermissionAction.Delete, PermissionObject.User])
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.userService.delete(id);
+  async remove(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return await this.userService.delete(req.user, id);
   }
 
   @ApiBody({ type: CreateEmployeeDto })

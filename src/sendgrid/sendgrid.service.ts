@@ -85,14 +85,6 @@ export class SendgridService {
           ],
           dynamicTemplateData: {
             token,
-            expireTime: ms(
-              ms(
-                this.configService.get<string>(
-                  'EMAIL_CONFIRMATION_TOKEN_EXPIRATION',
-                ),
-              ),
-              { long: true },
-            ),
           },
         },
       ],
