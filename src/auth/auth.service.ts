@@ -1,7 +1,8 @@
 import {
-  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/entities';
@@ -11,25 +12,62 @@ import { JwtService } from '@nestjs/jwt';
 import { TokensService } from 'src/tokens/tokens.service';
 import { UserErrorCodes } from 'src/user/errors/user-errors.enum';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
+import { ConfigService } from '@nestjs/config';
+import { nanoid } from 'nanoid';
+import ms from 'ms';
 
 import {
-  LoginDto,
-  ContextUser,
   VerifyUserDto,
   RequestPasswordChangeDto,
   PasswordChangeDto,
+  ContextUser,
 } from './dtos';
 import { AuthErrorCodes } from './errors';
+import { SessionEntity } from './entities';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(SessionEntity)
+    private readonly sessionsRepository: Repository<SessionEntity>,
     private readonly jwtService: JwtService,
     private readonly tokenService: TokensService,
     private readonly sendgridService: SendgridService,
+    private readonly configService: ConfigService,
   ) {}
+
+  async validateUser(email: string, password: string) {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('user.sessions', 'sessions')
+      .select([
+        'user.id',
+        'role',
+        'sessions',
+        'user.password',
+        'user.isVerified',
+      ])
+      .where('user.email = :email', { email })
+      .getOne();
+
+    if (!user) {
+      throw new UnauthorizedException(AuthErrorCodes.UserNotFoundError);
+    }
+
+    const isPasswordMatching = await argon2.verify(user.password, password);
+    if (!isPasswordMatching) {
+      throw new UnauthorizedException(AuthErrorCodes.IncorrectPasswordError);
+    }
+
+    if (!user.isVerified) {
+      throw new ForbiddenException(AuthErrorCodes.AccountNotVerifiedError);
+    }
+
+    return user;
+  }
 
   async verify(dto: VerifyUserDto) {
     const token = await this.tokenService.findEmailConfirmationTokenOrFail(
@@ -96,31 +134,80 @@ export class AuthService {
     return user;
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.userRepository.findOne({
-      where: {
-        email: dto.email,
-      },
+  async createSession(
+    sessionId: string,
+    user: UserEntity,
+    refreshToken: string,
+  ) {
+    const session = this.sessionsRepository.create({
+      id: sessionId,
+      user,
+      refreshToken: refreshToken,
+      expiresAt: new Date(
+        Date.now() + ms(this.configService.get('JWT_REFRESH_EXPIRES_IN')),
+      ),
     });
-    if (!user) {
-      throw new BadRequestException(
-        AuthErrorCodes.UserWithThisEmailWasNotFoundError,
-      );
-    }
-    if (!user.isVerified) {
-      throw new BadRequestException(AuthErrorCodes.AccountNotVerifiedError);
-    }
-    const isPasswordMatching = await argon2.verify(user.password, dto.password);
-    if (!isPasswordMatching) {
-      throw new BadRequestException(AuthErrorCodes.IncorrectPasswordError);
-    }
+
+    return await this.sessionsRepository.save(session);
+  }
+
+  async generateTokens(payload: ContextUser) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  async login(user: UserEntity) {
+    const sessionId = nanoid();
 
     const payload: ContextUser = {
       id: user.id,
+      roleId: user.role.id,
+      sessionId,
     };
 
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    const tokens = await this.generateTokens(payload);
+
+    await this.createSession(sessionId, user, tokens.refreshToken);
+
+    return tokens;
+  }
+
+  async refresh(session: SessionEntity) {
+    const tokens = await this.generateTokens({
+      id: session?.user.id,
+      roleId: session?.user?.role?.id,
+      sessionId: session?.id,
+    } as ContextUser);
+
+    const expiresAt = new Date(
+      Date.now() + ms(this.configService.get('JWT_REFRESH_EXPIRES_IN')),
+    );
+
+    await this.sessionsRepository.update(session, {
+      expiresAt,
+      refreshToken: tokens.refreshToken,
+    });
+
+    return tokens;
+  }
+
+  async logout(sessionId: string) {
+    await this.sessionsRepository.delete(sessionId);
+  }
+
+  async globalLogout(user: UserEntity) {
+    await this.sessionsRepository.delete({
+      user: user,
+    });
   }
 }

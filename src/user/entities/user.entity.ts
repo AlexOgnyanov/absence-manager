@@ -18,6 +18,7 @@ import {
   PasswordChangeTokenEntity,
 } from 'src/tokens/entities';
 import { DepartmentEntity } from 'src/departments/entities';
+import { SessionEntity } from 'src/auth/entities';
 
 @Entity('user')
 export class UserEntity {
@@ -70,6 +71,12 @@ export class UserEntity {
     nullable: true,
   })
   passwordChangeTokens: PasswordChangeTokenEntity[];
+
+  @OneToMany(() => SessionEntity, (session) => session.user, {
+    nullable: true,
+    cascade: true,
+  })
+  sessions: SessionEntity[];
 
   @ManyToOne(() => RoleEntity, (role) => role.users, { onDelete: 'SET NULL' })
   role: RoleEntity;

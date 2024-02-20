@@ -7,4 +7,6 @@ export enum AuthErrorCodes {
   PermissionExistsError = 'PERMISSION_EXISTS_ALREADY_ERROR',
   RoleNotFoundError = 'ROLE_NOT_FOUND_ERROR',
   AccountNotVerifiedError = 'ACCOUNT_NOT_VERIFIED_ERROR',
+  InvalidRefreshTokenError = 'INVALID_REFRESH_TOKEN_ERROR',
+  SessionNotFoundError = 'SESSION_NOT_FOUND_ERROR',
 }

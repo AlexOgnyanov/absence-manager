@@ -3,11 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { SwaggerModule } from '@nestjs/swagger';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { JwtAsyncConfig, typeOrmAsyncConfig } from './config';
+import { typeOrmAsyncConfig } from './config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PermissionsModule } from './permissions/permissions.module';
@@ -22,7 +21,6 @@ import { DepartmentsModule } from './departments/departments.module';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ScheduleModule.forRoot(),
-    JwtModule.registerAsync(JwtAsyncConfig),
     PassportModule,
     SwaggerModule,
     UserModule,
