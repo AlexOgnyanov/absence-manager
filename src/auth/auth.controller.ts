@@ -1,15 +1,16 @@
 import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 import {
   LoginDto,
   PasswordChangeDto,
   RequestPasswordChangeDto,
+  RequestWithSession,
   RequestWithUser,
   VerifyUserDto,
 } from './dtos';
-import { JwtAuthGuard } from './guards';
+import { JwtAuthGuard, LocalAuthGuard, RefreshAuthGuard } from './guards';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -43,8 +44,31 @@ export class AuthController {
     return await this.authService.passwordChange(dto);
   }
 
+  @ApiBody({ type: LoginDto })
+  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    return await this.authService.login(dto);
+  async login(@Request() req: RequestWithUser) {
+    return await this.authService.login(req.user);
+  }
+
+  @ApiBearerAuth('RefreshToken')
+  @UseGuards(RefreshAuthGuard)
+  @Post('refresh')
+  async refresh(@Request() req: RequestWithSession) {
+    return await this.authService.refresh(req.user.session);
+  }
+
+  @ApiBearerAuth('AccessToken')
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Request() req: RequestWithUser) {
+    return await this.authService.logout(req.user.sessions[0].id);
+  }
+
+  @ApiBearerAuth('AccessToken')
+  @UseGuards(JwtAuthGuard)
+  @Post('global-logout')
+  async globalLogout(@Request() req: RequestWithUser) {
+    return await this.authService.globalLogout(req.user);
   }
 }
