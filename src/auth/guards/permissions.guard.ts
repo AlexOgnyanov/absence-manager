@@ -9,8 +9,8 @@ import { PERMISSION_CHECKER_KEY } from '../constants';
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private abilityFactory: CaslAbilityFactory,
+    private readonly reflector: Reflector,
+    private readonly abilityFactory: CaslAbilityFactory,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

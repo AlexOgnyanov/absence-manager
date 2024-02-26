@@ -1,13 +1,7 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
-import { RolesService } from 'src/roles/roles.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 import { RoleEntity } from 'src/roles/entities';
@@ -26,9 +20,6 @@ export class CompaniesService {
     private readonly companyRepository: Repository<CompanyEntity>,
     private readonly userService: UserService,
     private readonly permissionsService: PermissionsService,
-
-    @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService,
   ) {}
 
   async create(dto: CreateCompanyDto) {
@@ -66,6 +57,9 @@ export class CompaniesService {
 
   async findOne(id: number) {
     return await this.companyRepository.findOne({
+      relations: {
+        employees: true,
+      },
       where: {
         id,
       },

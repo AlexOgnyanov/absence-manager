@@ -14,7 +14,7 @@ import { RoleEntity } from './entities';
   imports: [
     TypeOrmModule.forFeature([UserEntity, PermissionEntity, RoleEntity]),
     forwardRef(() => CompaniesModule),
-    UserModule,
+    forwardRef(() => UserModule),
     PermissionsModule,
   ],
   controllers: [RolesController],

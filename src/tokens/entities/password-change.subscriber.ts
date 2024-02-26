@@ -19,7 +19,7 @@ export class PasswordChangeSubscriber
   constructor(
     connection: DataSource,
     private readonly tasksService: TasksService,
-    private configService: ConfigService,
+    private readonly configService: ConfigService,
   ) {
     connection.subscribers.push(this);
   }

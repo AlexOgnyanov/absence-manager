@@ -15,6 +15,7 @@ import { CompaniesModule } from './companies/companies.module';
 import { TokensModule } from './tokens/tokens.module';
 import { TasksModule } from './tasks/tasks.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { AbsencesModule } from './absences/absences.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { DepartmentsModule } from './departments/departments.module';
     TokensModule,
     TasksModule,
     DepartmentsModule,
+    AbsencesModule,
   ],
   providers: [
     {

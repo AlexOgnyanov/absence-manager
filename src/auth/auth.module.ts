@@ -8,6 +8,8 @@ import { PermissionsModule } from 'src/permissions/permissions.module';
 import { UserModule } from 'src/user/user.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { TokensModule } from 'src/tokens/tokens.module';
+import { AbsenceAmountEntity } from 'src/absences/entities';
+import { CompanyEntity } from 'src/companies/entities';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -22,7 +24,12 @@ import { SessionEntity } from './entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, SessionEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      SessionEntity,
+      AbsenceAmountEntity,
+      CompanyEntity,
+    ]),
     JwtModule,
     PassportModule,
     UserModule,
