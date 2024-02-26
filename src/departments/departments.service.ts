@@ -28,7 +28,7 @@ export class DepartmentsService {
     if (!userCompany) {
       if (!dto.companyId) {
         throw new BadRequestException(
-          DepartmentErrorCodes.GlobalAdminsShouldProvideCompanyId,
+          DepartmentErrorCodes.GlobalAdminsMustProvideCompanyIdError,
         );
       }
       await this.companiesService.findOneOrFail(dto.companyId);

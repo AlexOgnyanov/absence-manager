@@ -13,8 +13,8 @@ import { CompanyEntity } from './entities';
   imports: [
     TypeOrmModule.forFeature([CompanyEntity, RoleEntity]),
     forwardRef(() => RolesModule),
-    PermissionsModule,
-    UserModule,
+    forwardRef(() => PermissionsModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [CompaniesController],
   providers: [CompaniesService],

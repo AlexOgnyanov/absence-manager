@@ -33,8 +33,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     const session = await this.sessionRepository.findOne({
+      relations: {
+        user: true,
+      },
       where: {
-        user,
+        user: {
+          id: user.id,
+        },
         id: payload.sessionId,
       },
     });

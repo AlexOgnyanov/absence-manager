@@ -24,11 +24,11 @@ export class TokensService {
 
   constructor(
     @InjectRepository(PasswordResetTokenEntity)
-    private passwordResetTokenRepository: Repository<PasswordResetTokenEntity>,
+    private readonly passwordResetTokenRepository: Repository<PasswordResetTokenEntity>,
     @InjectRepository(PasswordChangeTokenEntity)
-    private passwordChangeTokenRepository: Repository<PasswordChangeTokenEntity>,
+    private readonly passwordChangeTokenRepository: Repository<PasswordChangeTokenEntity>,
     @InjectRepository(EmailConfirmationTokenEntity)
-    private emailConfirmationTokenRepository: Repository<EmailConfirmationTokenEntity>,
+    private readonly emailConfirmationTokenRepository: Repository<EmailConfirmationTokenEntity>,
     private readonly configService: ConfigService,
   ) {
     this.customNanoid = customAlphabet(this.alphabet, 8);

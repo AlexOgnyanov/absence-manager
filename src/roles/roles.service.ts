@@ -25,9 +25,9 @@ export class RolesService {
     private readonly usersRepository: Repository<UserEntity>,
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
-    private readonly usersService: UserService,
     @Inject(forwardRef(() => CompaniesService))
     private readonly companiesService: CompaniesService,
+    private readonly usersService: UserService,
     private readonly permissionsService: PermissionsService,
   ) {}
 

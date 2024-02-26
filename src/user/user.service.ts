@@ -9,6 +9,9 @@ import { Repository } from 'typeorm';
 import { AuthErrorCodes } from 'src/auth/errors';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokensService } from 'src/tokens/tokens.service';
+import { AbsenceAmountEntity } from 'src/absences/entities';
+import { CompanyErrorCodes } from 'src/companies/errors';
+import { CompanyEntity } from 'src/companies/entities';
 
 import { CreateEmployeeDto, CreateUserDto, UpdateUserDto } from './dtos';
 import { UserEntity } from './entities';
@@ -18,9 +21,13 @@ import { UserErrorCodes } from './errors/user-errors.enum';
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
-    private tokensService: TokensService,
-    private sendgridService: SendgridService,
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(AbsenceAmountEntity)
+    private readonly absenceAmountRepository: Repository<AbsenceAmountEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
+    private readonly tokensService: TokensService,
+    private readonly sendgridService: SendgridService,
   ) {}
 
   async create(dto: CreateUserDto) {
@@ -168,6 +175,45 @@ export class UserService {
 
     await this.sendgridService.sendEmailVerification(dto.email, token.token);
 
+    await this.appendAllAbsenceAmountsToUser(employeeEntity);
+
     return employeeEntity;
+  }
+
+  async findCompanyOrFail(id: number) {
+    const company = await this.companyRepository.findOne({
+      relations: {
+        employees: true,
+      },
+      where: {
+        id,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException(CompanyErrorCodes.CompanyNotFoundError);
+    }
+
+    return company;
+  }
+
+  async appendAllAbsenceAmountsToUser(user: UserEntity) {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+
+    const company = await this.findCompanyOrFail(userCompany);
+
+    const absenceAmounts: AbsenceAmountEntity[] = [];
+
+    for (let i = 0; i < company?.absenceTypes?.length; i++) {
+      absenceAmounts.push(
+        this.absenceAmountRepository.create({
+          absenceType: company.absenceTypes[i],
+          user,
+          amount: company.absenceTypes[i].yealyCount,
+        }),
+      );
+    }
+
+    return await this.absenceAmountRepository.save(absenceAmounts);
   }
 }

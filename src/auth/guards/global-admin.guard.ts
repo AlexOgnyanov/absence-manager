@@ -5,7 +5,7 @@ import { RequestWithUser } from '../dtos';
 
 @Injectable()
 export class GlobalAdminGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: RequestWithUser = context.switchToHttp().getRequest();

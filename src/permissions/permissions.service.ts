@@ -21,7 +21,7 @@ export class PermissionsService {
   constructor(
     @InjectRepository(PermissionEntity)
     private readonly permissionRepository: Repository<PermissionEntity>,
-    private abilityFactory: CaslAbilityFactory,
+    private readonly abilityFactory: CaslAbilityFactory,
   ) {}
 
   async findUserPermissions(userId: string): Promise<PermissionEntity[]> {

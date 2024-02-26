@@ -1,3 +1,4 @@
+import { AbsenceTypeEntity } from 'src/absences/entities';
 import { DepartmentEntity } from 'src/departments/entities';
 import { RoleEntity } from 'src/roles/entities';
 import { UserEntity } from 'src/user/entities';
@@ -22,10 +23,12 @@ export class CompanyEntity {
   name: string;
 
   @Column()
-  yearlyAbsenceCount: number;
-
-  @Column()
   ownerContactEmail: string;
+
+  @OneToMany(() => AbsenceTypeEntity, (absenceType) => absenceType.company, {
+    eager: true,
+  })
+  absenceTypes: AbsenceTypeEntity[];
 
   @OneToOne(() => UserEntity, (user) => user.ownedCompany, {
     eager: true,
