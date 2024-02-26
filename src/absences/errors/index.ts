@@ -1,1 +1,1 @@
-export * from './absence-types-errors.enum';
+export * from './absence-errors.enum';

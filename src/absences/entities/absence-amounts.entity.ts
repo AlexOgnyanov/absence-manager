@@ -37,6 +37,7 @@ export class AbsenceAmountEntity {
 
   @ManyToOne(() => UserEntity, (user) => user.absenceTypeAmounts, {
     onDelete: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn()
   user: UserEntity;
