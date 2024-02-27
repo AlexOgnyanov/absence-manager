@@ -5,6 +5,8 @@ import { CompaniesService } from 'src/companies/companies.service';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
+import { RolesService } from 'src/roles/roles.service';
+import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
 import {
   AddAbsencesToUserDto,
@@ -33,6 +35,7 @@ export class AbsencesService {
     private readonly sendgridService: SendgridService,
     private readonly companiesService: CompaniesService,
     private readonly usersService: UserService,
+    private readonly rolesService: RolesService,
   ) {}
 
   async createType(user: UserEntity, dto: CreateAbsenceTypeDto) {
@@ -224,7 +227,27 @@ export class AbsencesService {
     const takenAbsencesEntity =
       await this.absencesRepository.save(takenAbsence);
 
-    //send email to all approvers
+    const roles = await this.rolesService.findUsersByPermissions(userCompany, [
+      [PermissionAction.Create, PermissionObject.Absence],
+      [PermissionAction.Manage, PermissionObject.Absence],
+      [PermissionAction.Manage, PermissionObject.All],
+    ]);
+
+    const emails: string[] = [];
+
+    for (let i = 0; i < roles.length; i++) {
+      for (let j = 0; j < roles[i].users.length; j++) {
+        emails.push(roles[i].users[j].email);
+      }
+    }
+
+    await this.sendgridService.sendAbsenceRequestedEmail(
+      emails,
+      user,
+      dto.startDate,
+      dto.endDate,
+      count,
+    );
 
     return takenAbsencesEntity;
   }
@@ -276,6 +299,7 @@ export class AbsencesService {
         user: {
           company: true,
         },
+        absenceType: true,
       },
       where: {
         id,
@@ -363,13 +387,22 @@ export class AbsencesService {
         absence.absenceType.id,
         userCompany,
       );
+
       if (absenceAmount?.amount) {
         absenceAmount.amount -= absence.count;
         await this.absenceAmountRepository.save(absenceAmount);
       }
-      //send email to everyone in all departments
+      await this.sendgridService.sendAbsenceApprovedEmail(absence);
+
+      const departmentEmails = await this.usersService.getDepartmentEmails(
+        absence.user,
+      );
+      await this.sendgridService.sendAbsenceApprovedDepartments(
+        departmentEmails,
+        absence,
+      );
     } else if (status === AbsenceStatusesEnum.Rejected) {
-      //send email to user
+      await this.sendgridService.sendAbsenceRejectedEmail(absence);
     }
 
     return await this.absencesRepository.save({

@@ -4,6 +4,7 @@ import { PermissionsModule } from 'src/permissions/permissions.module';
 import { CompaniesModule } from 'src/companies/companies.module';
 import { UserModule } from 'src/user/user.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
+import { RolesModule } from 'src/roles/roles.module';
 
 import { AbsencesService } from './absences.service';
 import { AbsenceTypesController } from './absences.controller';
@@ -24,6 +25,7 @@ import {
     UserModule,
     CompaniesModule,
     SendgridModule,
+    RolesModule,
   ],
   controllers: [AbsenceTypesController],
   providers: [AbsencesService],
