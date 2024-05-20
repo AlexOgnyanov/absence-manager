@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 
 import { AbsenceAmountEntity } from './absence-amounts.entity';
+import { AbsenceEntity } from './absences.entity';
 
 @Entity('absence_type')
 export class AbsenceTypeEntity {
@@ -32,6 +33,9 @@ export class AbsenceTypeEntity {
     cascade: true,
   })
   absenceTypeAmounts: AbsenceAmountEntity[];
+
+  @OneToMany(() => AbsenceEntity, (takenAbsence) => takenAbsence.absenceType)
+  takenAbsences: AbsenceEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: string;

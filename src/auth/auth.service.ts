@@ -171,7 +171,7 @@ export class AuthService {
 
     const payload: ContextUser = {
       id: user.id,
-      roleId: user.role.id,
+      roleId: user?.role?.id,
       sessionId,
     };
 

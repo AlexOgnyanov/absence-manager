@@ -11,7 +11,7 @@ import { UserEntity } from '../../user/entities/user.entity';
 @Entity('password_change_token')
 export class PasswordChangeTokenEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   token: string;

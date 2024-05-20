@@ -19,7 +19,7 @@ import {
 } from 'src/tokens/entities';
 import { DepartmentEntity } from 'src/departments/entities';
 import { SessionEntity } from 'src/auth/entities';
-import { AbsenceAmountEntity } from 'src/absences/entities';
+import { AbsenceAmountEntity, AbsenceEntity } from 'src/absences/entities';
 
 @Entity('user')
 export class UserEntity {
@@ -104,6 +104,18 @@ export class UserEntity {
     cascade: true,
   })
   absenceTypeAmounts: AbsenceAmountEntity[];
+
+  @OneToMany(() => AbsenceEntity, (takenAbsence) => takenAbsence.user)
+  takenAbsences: AbsenceEntity[];
+
+  @OneToMany(
+    () => AbsenceEntity,
+    (takenAbsence) => takenAbsence.replacementUser,
+    {
+      onDelete: 'NO ACTION',
+    },
+  )
+  replacements: AbsenceEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: string;

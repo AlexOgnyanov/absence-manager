@@ -8,11 +8,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginateQuery, Paginated, paginate } from 'nestjs-paginate';
 import { AuthErrorCodes } from 'src/auth/errors';
-import { Repository, Not, IsNull } from 'typeorm';
+import { Repository, Not, IsNull, In } from 'typeorm';
 import { UserEntity } from 'src/user/entities';
 import { UserService } from 'src/user/user.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
 import { CompaniesService } from 'src/companies/companies.service';
+import { RequiredPermission } from 'src/permissions/types';
 
 import { AssignRoleToUserDto, CreateRoleDto } from './dtos';
 import { RoleEntity } from './entities';
@@ -58,9 +59,7 @@ export class RolesService {
     const userCompany = user?.company?.id || user?.ownedCompany?.id;
     return await paginate(query, this.roleRepository, {
       where: {
-        ...(userCompany
-          ? { company: { id: userCompany } }
-          : { company: IsNull() }),
+        ...(userCompany ? { company: { id: userCompany } } : {}),
       },
       defaultSortBy: [['name', 'ASC']],
       sortableColumns: ['name'],
@@ -175,5 +174,26 @@ export class RolesService {
       assignee.role.permissions,
     );
     return await this.usersRepository.save(assignee);
+  }
+
+  async findRolesByPermissions(
+    companyId: number,
+    permissions: RequiredPermission[],
+  ) {
+    return await this.roleRepository.find({
+      relations: {
+        permissions: true,
+        users: true,
+      },
+      where: {
+        company: {
+          id: companyId,
+        },
+        permissions: {
+          action: In(permissions.map((permission) => permission[0])),
+          object: In(permissions.map((permission) => permission[1])),
+        },
+      },
+    });
   }
 }

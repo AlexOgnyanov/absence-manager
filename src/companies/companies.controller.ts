@@ -18,8 +18,7 @@ import { CheckPermissions } from 'src/auth/decorators';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
 import { CompaniesService } from './companies.service';
-import { CreateCompanyDto } from './dto/create-company.dto';
-import { UpdateCompanyDto } from './dto/update-company.dto';
+import { CreateCompanyDto, UpdateCompanyDto } from './dto';
 
 @ApiBearerAuth('AccessToken')
 @ApiTags('Companies')

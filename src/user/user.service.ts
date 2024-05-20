@@ -65,7 +65,7 @@ export class UserService {
     return user;
   }
 
-  async findAll(user?: UserEntity) {
+  async findAll(user: UserEntity) {
     const query = this.userRepository
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.role', 'role')
@@ -85,12 +85,9 @@ export class UserService {
   }
 
   async update(user: UserEntity, id: string, dto: UpdateUserDto) {
-    const userEntity = await this.findOneOrFail(id);
+    await this.findOneOrFail(id, user?.company?.id || user?.ownedCompany?.id);
 
-    await this.userRepository.update(id, {
-      ...userEntity,
-      ...dto,
-    });
+    await this.userRepository.update(id, dto);
   }
 
   async delete(user: UserEntity, id: string) {
@@ -215,5 +212,30 @@ export class UserService {
     }
 
     return await this.absenceAmountRepository.save(absenceAmounts);
+  }
+
+  async getDepartmentEmails(user: UserEntity) {
+    const userEntity = await this.userRepository.findOne({
+      relations: {
+        departments: {
+          users: true,
+        },
+      },
+      where: {
+        id: user.id,
+      },
+    });
+
+    const emails: string[] = [];
+    for (let i = 0; i < userEntity.departments.length; i++) {
+      for (let j = 0; j < userEntity.departments[i].users.length; j++) {
+        const userEmail = userEntity.departments[i].users[j].email;
+        if (userEmail !== userEntity.email) {
+          emails.push(userEmail);
+        }
+      }
+    }
+
+    return emails;
   }
 }

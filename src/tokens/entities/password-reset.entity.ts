@@ -11,7 +11,7 @@ import { UserEntity } from '../../user/entities/user.entity';
 @Entity('password_reset_token')
 export class PasswordResetTokenEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   token: string;

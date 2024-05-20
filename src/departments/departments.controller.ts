@@ -17,7 +17,7 @@ import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
 import { DepartmentsService } from './departments.service';
 import {
-  AppendUserToDepartmentDto,
+  ChangeDepartmentUsersDto,
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from './dto';
@@ -70,7 +70,7 @@ export class DepartmentsController {
   @Post('append-user')
   async addUserToDepartment(
     @Request() req: RequestWithUser,
-    @Body() dto: AppendUserToDepartmentDto,
+    @Body() dto: ChangeDepartmentUsersDto,
   ) {
     return await this.departmentsService.appendUserToDepartment(req.user, dto);
   }
@@ -79,7 +79,7 @@ export class DepartmentsController {
   @Post('remove-user')
   async removeUserFromDepartment(
     @Request() req: RequestWithUser,
-    @Body() dto: AppendUserToDepartmentDto,
+    @Body() dto: ChangeDepartmentUsersDto,
   ) {
     return await this.departmentsService.removeUserFromDepartment(
       req.user,

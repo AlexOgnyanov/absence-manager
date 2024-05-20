@@ -5,7 +5,7 @@ import { UserEntity } from '../../user/entities/user.entity';
 @Entity('email_confirmation_token')
 export class EmailConfirmationTokenEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   token: string;

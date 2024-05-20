@@ -4,7 +4,7 @@ import {
   TypeOrmModuleAsyncOptions,
 } from '@nestjs/typeorm';
 import { SessionSubscriber } from 'src/auth/entities';
-import { UserSubscriber } from 'src/user/entities/user-entity.subscriber';
+import { UserSubscriber } from 'src/user/entities';
 
 export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
   useFactory: async (
