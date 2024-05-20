@@ -261,7 +261,7 @@ export class AbsencesService {
         },
       },
       where: {
-        id,
+        absenceTypeId: id,
         user: {
           id: user.id,
           ...(companyId
@@ -285,6 +285,7 @@ export class AbsencesService {
       );
     }
 
+    delete absenceAmount.user;
     return absenceAmount;
   }
 
