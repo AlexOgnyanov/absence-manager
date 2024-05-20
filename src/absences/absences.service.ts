@@ -386,6 +386,12 @@ export class AbsencesService {
       throw new BadRequestException(AbsencesErrorCodes.AbsenceNotFoundError);
     }
 
+    if (status === absence.status) {
+      throw new BadRequestException(
+        AbsencesErrorCodes.AbsenseAlreadyReviewedError,
+      );
+    }
+
     if (status === AbsenceStatusesEnum.Approved) {
       const absenceAmount = await this.findAmountForUserOrFail(
         absence.user,
@@ -402,10 +408,13 @@ export class AbsencesService {
       const departmentEmails = await this.usersService.getDepartmentEmails(
         absence.user,
       );
-      await this.sendgridService.sendAbsenceApprovedDepartments(
-        departmentEmails,
-        absence,
-      );
+
+      if (departmentEmails.length) {
+        await this.sendgridService.sendAbsenceApprovedDepartments(
+          departmentEmails,
+          absence,
+        );
+      }
     } else if (status === AbsenceStatusesEnum.Rejected) {
       await this.sendgridService.sendAbsenceRejectedEmail(absence);
     }

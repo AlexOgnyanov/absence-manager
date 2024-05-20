@@ -9,4 +9,5 @@ export enum AbsencesErrorCodes {
   AbsenceNotFoundError = 'ABSENCE_NOT_FOUND_ERROR',
   UserCannotUpdateOthersAbsenceError = 'USER_CANNOT_UPDATE_OTHERS_ABSENCE_ERROR',
   UserCannotRemoveOthersAbsenceError = 'USER_CANNOT_REMOVE_OTHERS_ABSENCE_ERROR',
+  AbsenseAlreadyReviewedError = 'ABSENSE_ALREADY_APPROVED_ERROR',
 }
