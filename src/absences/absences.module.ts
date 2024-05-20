@@ -7,7 +7,7 @@ import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { RolesModule } from 'src/roles/roles.module';
 
 import { AbsencesService } from './absences.service';
-import { AbsenceTypesController } from './absences.controller';
+import { AbsencesController } from './absences.controller';
 import {
   AbsenceAmountEntity,
   AbsenceTypeEntity,
@@ -27,7 +27,7 @@ import {
     SendgridModule,
     RolesModule,
   ],
-  controllers: [AbsenceTypesController],
+  controllers: [AbsencesController],
   providers: [AbsencesService],
   exports: [AbsencesService],
 })

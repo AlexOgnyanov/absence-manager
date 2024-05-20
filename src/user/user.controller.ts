@@ -36,7 +36,14 @@ export class UserController {
     return await this.userService.create(dto);
   }
 
-  @CheckPermissions([PermissionAction.Read, PermissionObject.User])
+  @Get(':id')
+  async findOne(@Request() req: RequestWithUser) {
+    return await this.userService.findOneOrFail(
+      req.user.id,
+      req?.user?.company?.id || req?.user?.ownedCompany?.id,
+    );
+  }
+
   @Get()
   async findAll(@Request() req: RequestWithUser) {
     return await this.userService.findAll(req.user);

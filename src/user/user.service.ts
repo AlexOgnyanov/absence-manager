@@ -65,7 +65,7 @@ export class UserService {
     return user;
   }
 
-  async findAll(user?: UserEntity) {
+  async findAll(user: UserEntity) {
     const query = this.userRepository
       .createQueryBuilder('u')
       .leftJoinAndSelect('u.role', 'role')
@@ -85,12 +85,9 @@ export class UserService {
   }
 
   async update(user: UserEntity, id: string, dto: UpdateUserDto) {
-    const userEntity = await this.findOneOrFail(id);
+    await this.findOneOrFail(id, user?.company?.id || user?.ownedCompany?.id);
 
-    await this.userRepository.update(id, {
-      ...userEntity,
-      ...dto,
-    });
+    await this.userRepository.update(id, dto);
   }
 
   async delete(user: UserEntity, id: string) {

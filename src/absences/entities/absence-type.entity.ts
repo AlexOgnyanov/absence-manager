@@ -35,9 +35,6 @@ export class AbsenceTypeEntity {
   absenceTypeAmounts: AbsenceAmountEntity[];
 
   @OneToMany(() => AbsenceEntity, (takenAbsence) => takenAbsence.absenceType)
-  requested: AbsenceEntity[];
-
-  @OneToMany(() => AbsenceEntity, (takenAbsence) => takenAbsence.absenceType)
   takenAbsences: AbsenceEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })

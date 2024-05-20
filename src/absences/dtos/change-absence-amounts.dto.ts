@@ -1,7 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 
-export class AddAbsencesToUserDto {
+export class ChangeAbsenceAmountsForUserDto {
   @ApiProperty()
   @IsOptional()
   @IsUUID()
@@ -16,4 +22,9 @@ export class AddAbsencesToUserDto {
   @IsNotEmpty()
   @IsNumber()
   amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsBoolean()
+  append: boolean;
 }

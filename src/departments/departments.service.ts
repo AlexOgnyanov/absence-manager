@@ -6,7 +6,7 @@ import { CompaniesService } from 'src/companies/companies.service';
 import { UserService } from 'src/user/user.service';
 
 import {
-  AppendUserToDepartmentDto,
+  ChangeDepartmentUsersDto,
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from './dto';
@@ -94,7 +94,7 @@ export class DepartmentsService {
 
   async appendUserToDepartment(
     user: UserEntity,
-    dto: AppendUserToDepartmentDto,
+    dto: ChangeDepartmentUsersDto,
   ) {
     const department = await this.findOneOrFail(user, dto.departmentId);
     const appendedUser = await this.userService.findOneOrFail(
@@ -118,7 +118,7 @@ export class DepartmentsService {
 
   async removeUserFromDepartment(
     user: UserEntity,
-    dto: AppendUserToDepartmentDto,
+    dto: ChangeDepartmentUsersDto,
   ) {
     const department = await this.findOneOrFail(user, dto.departmentId);
     await this.userService.findOneOrFail(dto.userId, department.company.id);

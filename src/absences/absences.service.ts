@@ -7,13 +7,15 @@ import { UserService } from 'src/user/user.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { RolesService } from 'src/roles/roles.service';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
+import _ from 'lodash';
 
 import {
-  AddAbsencesToUserDto,
+  ChangeAbsenceAmountsForUserDto,
   CreateAbsenceTypeDto,
   RequestAbsenceDto,
+  UpdateAbsenceDto,
   UpdateAbsenceTypeDto,
-} from './dto';
+} from './dtos';
 import {
   AbsenceAmountEntity,
   AbsenceTypeEntity,
@@ -21,7 +23,6 @@ import {
 } from './entities';
 import { AbsencesErrorCodes } from './errors';
 import { AbsenceStatusesEnum } from './enums';
-import { UpdateAbsenceDto } from './dto/update-absence.dto';
 
 @Injectable()
 export class AbsencesService {
@@ -77,14 +78,14 @@ export class AbsencesService {
   }
 
   async findAllTypes(user: UserEntity) {
+    const userCompany = user?.company?.id || user?.ownedCompany?.id;
+
     return await this.absenceTypeRepository.find({
       relations: {
         company: true,
       },
       where: {
-        company: {
-          id: user?.company?.id || user?.ownedCompany?.id,
-        },
+        ...(userCompany ? { company: { id: userCompany } } : {}),
       },
     });
   }
@@ -189,7 +190,7 @@ export class AbsencesService {
       );
     }
 
-    const replacementUser = dto.replacementUserId
+    const replacementUser = dto?.replacementUserId
       ? await this.usersService.findOneOrFail(
           dto.replacementUserId,
           userCompany,
@@ -227,7 +228,7 @@ export class AbsencesService {
     const takenAbsencesEntity =
       await this.absencesRepository.save(takenAbsence);
 
-    const roles = await this.rolesService.findUsersByPermissions(userCompany, [
+    const roles = await this.rolesService.findRolesByPermissions(userCompany, [
       [PermissionAction.Create, PermissionObject.Absence],
       [PermissionAction.Manage, PermissionObject.Absence],
       [PermissionAction.Manage, PermissionObject.All],
@@ -242,7 +243,7 @@ export class AbsencesService {
     }
 
     await this.sendgridService.sendAbsenceRequestedEmail(
-      emails,
+      _.uniq(emails),
       user,
       dto.startDate,
       dto.endDate,
@@ -265,7 +266,7 @@ export class AbsencesService {
           id: user.id,
           ...(companyId
             ? { company: { id: companyId } }
-            : { company: { id: user.company.id } }),
+            : { company: { id: user?.company?.id || user?.ownedCompany?.id } }),
         },
       },
     });
@@ -327,7 +328,7 @@ export class AbsencesService {
     return absence;
   }
 
-  async findAll(user: UserEntity, status: AbsenceStatusesEnum) {
+  async findAll(user: UserEntity, status: AbsenceStatusesEnum = null) {
     const userCompany = user?.company?.id || user?.ownedCompany?.id;
 
     return await this.absencesRepository.find({
@@ -339,7 +340,7 @@ export class AbsencesService {
         replacementUser: true,
       },
       where: {
-        status,
+        ...(status ? { status } : {}),
         user: {
           company: {
             id: userCompany,
@@ -349,7 +350,10 @@ export class AbsencesService {
     });
   }
 
-  async findAbsencesForUser(user: UserEntity, status: AbsenceStatusesEnum) {
+  async findAbsencesForUser(
+    user: UserEntity,
+    status: AbsenceStatusesEnum = null,
+  ) {
     return await this.absencesRepository.find({
       relations: {
         user: true,
@@ -357,7 +361,7 @@ export class AbsencesService {
         replacementUser: true,
       },
       where: {
-        status,
+        ...(status ? { status } : {}),
         user: {
           id: user.id,
         },
@@ -430,7 +434,10 @@ export class AbsencesService {
     });
   }
 
-  async addAbsences(user: UserEntity, dto: AddAbsencesToUserDto) {
+  async changeAbsenceAmount(
+    user: UserEntity,
+    dto: ChangeAbsenceAmountsForUserDto,
+  ) {
     const userCompany = user?.company?.id || user?.ownedCompany?.id;
 
     const userEntity = await this.usersService.findOneOrFail(
@@ -443,25 +450,11 @@ export class AbsencesService {
       dto.absenceTypeId,
     );
 
-    absenceAmount.amount += dto.amount;
-
-    return await this.absenceAmountRepository.save(absenceAmount);
-  }
-
-  async removeAbsences(user: UserEntity, dto: AddAbsencesToUserDto) {
-    const userCompany = user?.company?.id || user?.ownedCompany?.id;
-
-    const userEntity = await this.usersService.findOneOrFail(
-      dto.userId,
-      userCompany,
-    );
-
-    const absenceAmount = await this.findAmountForUserOrFail(
-      userEntity,
-      dto.absenceTypeId,
-    );
-
-    absenceAmount.amount = Math.max(0, absenceAmount.amount - dto.amount);
+    if (dto.append) {
+      absenceAmount.amount += dto.amount;
+    } else {
+      absenceAmount.amount = Math.max(0, absenceAmount.amount - dto.amount);
+    }
 
     return await this.absenceAmountRepository.save(absenceAmount);
   }
@@ -470,5 +463,17 @@ export class AbsencesService {
     const userCompany = user?.company?.id || user?.ownedCompany?.id;
 
     return await this.findAmountForUserOrFail(user, absenceTypeId, userCompany);
+  }
+
+  async removeAbsence(user: UserEntity, absenceId: number) {
+    const absence = await this.findOneOrFail(user, absenceId);
+
+    if (absence.user.id !== user.id) {
+      throw new BadRequestException(
+        AbsencesErrorCodes.UserCannotRemoveOthersAbsenceError,
+      );
+    }
+
+    return await this.absencesRepository.remove(absence);
   }
 }

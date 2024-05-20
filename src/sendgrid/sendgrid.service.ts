@@ -108,32 +108,24 @@ export class SendgridService {
     endDate: Date,
     weekdaysCount: number,
   ) {
-    const mails: MailDataRequired[] = [];
-
-    for (let i = 0; i < emails.length; i++) {
-      mails.push({
-        from: this.configService.get<string>('EMAIL_SENDER_ADDRESS'),
-        templateId: Templates.AbsenceRequested,
-        personalizations: [
-          {
-            to: [
-              {
-                email: emails[i],
-              },
-            ],
-            dynamicTemplateData: {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              startDate: this.formatDate(startDate),
-              endDate: this.formatDate(endDate),
-              weekdaysCount,
-            },
+    const mail: MailDataRequired = {
+      from: this.configService.get<string>('EMAIL_SENDER_ADDRESS'),
+      templateId: Templates.AbsenceRequested,
+      personalizations: [
+        {
+          to: emails,
+          dynamicTemplateData: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            startDate: this.formatDate(startDate),
+            endDate: this.formatDate(endDate),
+            weekdaysCount,
           },
-        ],
-      });
-    }
+        },
+      ],
+    };
 
-    await this.sendEmail(mails);
+    await this.sendEmail(mail);
   }
 
   async sendAbsenceApprovedEmail(absenceEntity: AbsenceEntity) {
@@ -190,35 +182,27 @@ export class SendgridService {
     emails: string[],
     absenceEntity: AbsenceEntity,
   ) {
-    const mails: MailDataRequired[] = [];
-
-    for (let i = 0; i < emails.length; i++) {
-      mails.push({
-        from: this.configService.get<string>('EMAIL_SENDER_ADDRESS'),
-        templateId: Templates.AbsenceApprovedDepartments,
-        personalizations: [
-          {
-            to: [
-              {
-                email: emails[i],
-              },
-            ],
-            dynamicTemplateData: {
-              firstName: absenceEntity.user.firstName,
-              lastName: absenceEntity.user.lastName,
-              startDate: this.formatDate(absenceEntity.startDate),
-              endDate: this.formatDate(absenceEntity.endDate),
-              weekdaysCount: absenceEntity.count,
-            },
+    const mail: MailDataRequired = {
+      from: this.configService.get<string>('EMAIL_SENDER_ADDRESS'),
+      templateId: Templates.AbsenceApprovedDepartments,
+      personalizations: [
+        {
+          to: emails,
+          dynamicTemplateData: {
+            firstName: absenceEntity.user.firstName,
+            lastName: absenceEntity.user.lastName,
+            startDate: this.formatDate(absenceEntity.startDate),
+            endDate: this.formatDate(absenceEntity.endDate),
+            weekdaysCount: absenceEntity.count,
           },
-        ],
-      });
-    }
+        },
+      ],
+    };
 
-    await this.sendEmail(mails);
+    await this.sendEmail(mail);
   }
 
-  private async sendEmail(mail: MailDataRequired | MailDataRequired[]) {
+  private async sendEmail(mail: MailDataRequired) {
     return await this.sgMail.send(mail);
   }
 }

@@ -18,20 +18,20 @@ import { CheckPermissions } from 'src/auth/decorators';
 import { PermissionAction, PermissionObject } from 'src/permissions/enums';
 
 import {
-  AddAbsencesToUserDto,
+  ChangeAbsenceAmountsForUserDto,
   CreateAbsenceTypeDto,
   RequestAbsenceDto,
   UpdateAbsenceTypeDto,
-} from './dto';
+} from './dtos';
 import { AbsencesService } from './absences.service';
 import { AbsenceStatusesEnum } from './enums';
-import { UpdateAbsenceDto } from './dto/update-absence.dto';
+import { UpdateAbsenceDto } from './dtos/update-absence.dto';
 
 @ApiTags('Absences')
 @ApiBearerAuth('AccessToken')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('absences')
-export class AbsenceTypesController {
+export class AbsencesController {
   constructor(private readonly absencesService: AbsencesService) {}
 
   @CheckPermissions([PermissionAction.Create, PermissionObject.AbsenceType])
@@ -144,27 +144,23 @@ export class AbsenceTypesController {
     return await this.absencesService.updateAbsence(req.user, +absenceId, dto);
   }
 
-  @CheckPermissions(
-    [PermissionAction.Update, PermissionObject.Absence],
-    [PermissionAction.Update, PermissionObject.User],
-  )
-  @Post('add-absences')
-  async addAbsences(
+  @Delete('/:absenceId')
+  async removeAbsence(
     @Request() req: RequestWithUser,
-    @Body() dto: AddAbsencesToUserDto,
+    @Param('absenceId') absenceId: string,
   ) {
-    return await this.absencesService.addAbsences(req.user, dto);
+    return await this.absencesService.removeAbsence(req.user, +absenceId);
   }
 
   @CheckPermissions(
     [PermissionAction.Update, PermissionObject.Absence],
     [PermissionAction.Update, PermissionObject.User],
   )
-  @Post('remove-absences')
-  async removeAbsences(
+  @Post('change-absence-amounts')
+  async addAbsences(
     @Request() req: RequestWithUser,
-    @Body() dto: AddAbsencesToUserDto,
+    @Body() dto: ChangeAbsenceAmountsForUserDto,
   ) {
-    return await this.absencesService.removeAbsences(req.user, dto);
+    return await this.absencesService.changeAbsenceAmount(req.user, dto);
   }
 }

@@ -59,9 +59,7 @@ export class RolesService {
     const userCompany = user?.company?.id || user?.ownedCompany?.id;
     return await paginate(query, this.roleRepository, {
       where: {
-        ...(userCompany
-          ? { company: { id: userCompany } }
-          : { company: IsNull() }),
+        ...(userCompany ? { company: { id: userCompany } } : {}),
       },
       defaultSortBy: [['name', 'ASC']],
       sortableColumns: ['name'],
@@ -178,7 +176,7 @@ export class RolesService {
     return await this.usersRepository.save(assignee);
   }
 
-  async findUsersByPermissions(
+  async findRolesByPermissions(
     companyId: number,
     permissions: RequiredPermission[],
   ) {

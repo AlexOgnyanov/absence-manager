@@ -31,7 +31,7 @@
     "migration:create": "typeorm-ts-node-esm migration:create",
     "postgre:up": "docker compose up postgre -d",
     "postgre:rm": "docker compose rm postgre -s -f -v",
-    "postgre:reset": "npm run postgre:rm && npm run postgre:up && npm run migration:run && npm run seed:run",
+    "postgre:reset": "npm run postgre:rm && npm run postgre:up && npm run migration:run",
     "compose:up": "docker compose up -d"
   },
   "dependencies": {
@@ -51,6 +51,7 @@
     "class-validator": "^0.14.0",
     "eslint-plugin-import": "^2.29.0",
     "fs": "^0.0.1-security",
+    "lodash": "^4.17.21",
     "ms": "^2.1.3",
     "nanoid": "^3.3.7",
     "nestjs-paginate": "^8.6.0",

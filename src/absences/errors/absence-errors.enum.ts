@@ -8,4 +8,5 @@ export enum AbsencesErrorCodes {
   AbsenceMustBeAtLeastOneDayError = 'ABSENCE_MUST_BE_AT_LEAST_ONE_DAY_ERROR',
   AbsenceNotFoundError = 'ABSENCE_NOT_FOUND_ERROR',
   UserCannotUpdateOthersAbsenceError = 'USER_CANNOT_UPDATE_OTHERS_ABSENCE_ERROR',
+  UserCannotRemoveOthersAbsenceError = 'USER_CANNOT_REMOVE_OTHERS_ABSENCE_ERROR',
 }
